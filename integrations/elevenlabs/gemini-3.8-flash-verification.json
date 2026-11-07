@@ -1,0 +1,19 @@
+{
+  "configuredModel": "gemini-3.8-flash",
+  "agentId": "agent_8301m6v7kzdgfza9119295h54skt",
+  "mode": "voice-output",
+  "checkedAt": "2026-11-07T16:45:56.001Z",
+  "conversationId": "conv_2801m6vee1n8egwvb1vqzg1qg8yq",
+  "responses": [
+    "[calm] Your forecast shows an expected shortfall of £180.00 on 12 November, bringing your projected balance to £-180.00. This happens because your rent and energy bills are scheduled to go out before an estimated freelance invoice arrives on 16 November. Would you like to look at Build a recovery plan to prepare a support request?",
+    "[warm] You could use the Build a recovery plan feature to prepare an editable draft for your bill providers before that date arrives. Alternatively, reaching out early to your energy supplier or landlord can sometimes help adjust payment timing. Would you like to [calm] review a draft plan together in the app?"
+  ],
+  "transcripts": [],
+  "audioBytes": 630748,
+  "agentVersionId": "agtvrsn_0601m6ved11tf9c8hvnvrh6z5wqq",
+  "observedModels": [
+    "gemini-3.8-flash"
+  ],
+  "modelConfirmedFrom": "ElevenLabs conversation transcript producing_llm and model_usage",
+  "onlyConversationModelChanged": true
+}

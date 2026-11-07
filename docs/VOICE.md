@@ -4,7 +4,7 @@ The Flutter app connects to a dedicated public **synthetic-data demonstration** 
 
 - Agent: `agent_8301m6v7kzdgfza9119295h54skt`
 - Name: Cloudy
-- Model: Gemini 2.5 Flash; voice: Charlotte (`XB0fDUnXU5powFXDhCwa`).
+- Model: Gemini 3.8 Flash; voice: Charlotte (`XB0fDUnXU5powFXDhCwa`).
 - Created for this prototype on 7 November 2026; maximum two concurrent calls and 100 sessions/day.
 - Voice recording disabled, transcript/audio deletion enabled, retention set to one day. This is not certified zero-retention mode. Use synthetic data only.
 
@@ -58,3 +58,7 @@ node integrations/elevenlabs/verify.mjs --speech-input /tmp/sc-question.pcm /tmp
 The result is saved to `speech-verification.json`. On 7 November 2026, the service recognised both spoken questions, correctly explained the £180 gap on 12 November and returned a contextual recovery-plan follow-up with 967,680 bytes of generated audio (`conv_5701m6v830chfk1tptwtta19z273`). This verifies ASR → conversation → TTS at the service boundary. Mobile WebRTC microphone capture, speaker routing and audible playback remain separate device checks.
 
 On 7 November 2026, the existing agent was renamed **Cloudy** for **Raise**. A read-back verified the new display name and prompt identity, with model, voice, financial instructions, privacy and call limits preserved. A live text-only turn confirmed “I'm Cloudy, and I'm part of Raise”; the result is recorded in `integrations/elevenlabs/identity-verification.json`. The first message remains empty so the app can provide financial context before the first reply. Existing text, voice and speech verification JSON files record earlier runs under the historical Pip name; they have been retained unchanged.
+
+Later that day, the conversation model changed from Gemini 2.5 Flash to **Gemini 3.8 Flash** at the user's request. A before/after read-back confirmed that only `conversation_config.agent.prompt.llm` changed. Prompt, voice, temperature, token cap, privacy and quotas remain unchanged. New sessions use the updated model without an app rebuild; end an existing voice session or return to Home before starting a new conversation.
+
+Two-turn text-only and voice-output checks passed on the new model, preserving the synthetic £180 shortfall and a contextual support follow-up. The voice run produced 630,748 bytes of audio, and its conversation record identifies `gemini-3.8-flash` as the producing model. Evidence is saved separately in `gemini-3.8-flash-text-verification.json` and `gemini-3.8-flash-verification.json`. Phone microphone and audible playback were not retested for this model change.

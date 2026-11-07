@@ -4,7 +4,7 @@
   "purpose": "Dedicated public synthetic-data NatWest hackathon prototype; no banking actions",
   "language": "en",
   "first_message": "",
-  "model": "gemini-2.5-flash",
+  "model": "gemini-3.8-flash",
   "temperature": 0.0,
   "max_tokens": 800,
   "voice_id": "XB0fDUnXU5powFXDhCwa",

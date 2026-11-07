@@ -1,0 +1,13 @@
+{
+  "configuredModel": "gemini-3.8-flash",
+  "agentId": "agent_8301m6v7kzdgfza9119295h54skt",
+  "mode": "text-only",
+  "checkedAt": "2026-11-07T16:46:34.902Z",
+  "conversationId": "conv_2301m6vef7m5e5artfqedmkg9bmt",
+  "responses": [
+    "Your forecast shows an estimated shortfall of £180.00 on 12 November 2026, bringing your lowest balance to £-180.00. This timing gap happens because your rent and energy bills are due before an estimated freelance invoice arrives on 16 November. Would you like to look at Build a recovery plan to prepare a draft request for your bill providers?",
+    "You could open Build a recovery plan to prepare an editable draft request to contact your energy provider or landlord about adjusting your payment dates. For free, impartial guidance with managing bills, you can also look at MoneyHelper at https://www.moneyhelper.org.uk/en/money-troubles/dealing-with-debt. Would you like to review that draft plan together now?"
+  ],
+  "transcripts": [],
+  "audioBytes": 0
+}
