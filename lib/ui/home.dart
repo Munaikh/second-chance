@@ -14,6 +14,7 @@ import 'package:second_chance/ui/cloudy.dart';
 import 'package:second_chance/ui/forecast.dart';
 import 'package:second_chance/ui/profile.dart';
 import 'package:second_chance/ui/home_motion.dart';
+import 'package:second_chance/ui/voice_companion_view.dart';
 
 class PreparePage extends StatefulWidget {
   const PreparePage({
@@ -39,6 +40,7 @@ class _PreparePageState extends State<PreparePage>
   CompanionController? _companion;
   PageRoute<dynamic>? _route;
   late bool _chatOpen = widget.startInConversation;
+  bool _voiceOpen = false;
   int _messageCount = 0;
   String? _profileId;
   @override
@@ -63,6 +65,7 @@ class _PreparePageState extends State<PreparePage>
     }
     if (_profileId != null && _profileId != state.profile.id) {
       _chatOpen = false;
+      _voiceOpen = false;
       _input.clear();
       _focus.unfocus();
     }
@@ -130,7 +133,10 @@ class _PreparePageState extends State<PreparePage>
   }
 
   Future<void> _sendPrompt(String prompt) async {
-    setState(() => _chatOpen = true);
+    setState(() {
+      _chatOpen = true;
+      _voiceOpen = false;
+    });
     _focus.unfocus();
     AppScope.of(context).updateCompanionContext();
     await _companion!.sendText(prompt);
@@ -148,15 +154,25 @@ class _PreparePageState extends State<PreparePage>
   }
 
   Future<void> _voice() async {
-    if (_companion!.phase == CompanionPhase.connecting) return;
-    setState(() => _chatOpen = true);
+    setState(() {
+      _chatOpen = true;
+      _voiceOpen = true;
+    });
     _focus.unfocus();
     AppScope.of(context).updateCompanionContext();
-    if (_companion!.isVoiceActive) {
-      await _companion!.toggleMute();
-    } else {
+    if (!_companion!.isVoiceActive &&
+        _companion!.phase != CompanionPhase.connecting) {
       await _companion!.startVoice();
     }
+  }
+
+  void _showTextChat() {
+    setState(() => _voiceOpen = false);
+  }
+
+  Future<void> _endVoice() async {
+    await _companion!.endSession();
+    if (mounted) _showTextChat();
   }
 
   Future<void> _closeChat() async {
@@ -165,7 +181,10 @@ class _PreparePageState extends State<PreparePage>
     if (widget.startInConversation) {
       Navigator.of(context).maybePop();
     } else {
-      setState(() => _chatOpen = false);
+      setState(() {
+        _chatOpen = false;
+        _voiceOpen = false;
+      });
     }
   }
 
@@ -240,6 +259,15 @@ class _PreparePageState extends State<PreparePage>
                     final mascotTop = compact
                         ? top + 76
                         : math.max(top + 158, box.maxHeight * .35);
+                    final voicePanelHeight = math.min(
+                      box.maxHeight - top - 80,
+                      math.max(box.maxHeight / 3, 240.0),
+                    );
+                    final voiceSize = math.min(box.maxWidth, 390.0);
+                    final voiceTop = math.max(
+                      top + 60,
+                      (box.maxHeight - voicePanelHeight - voiceSize) / 2,
+                    );
                     return ClipRect(
                       child: Stack(
                         clipBehavior: Clip.hardEdge,
@@ -297,23 +325,35 @@ class _PreparePageState extends State<PreparePage>
                             ),
                           ConversationMotion(
                             open: _chatOpen,
-                            builder: (context, progress, child) {
-                              final size =
-                                  largeSize + (78 - largeSize) * progress;
-                              return Positioned(
-                                top:
-                                    mascotTop +
-                                    (top + 2 - mascotTop) * progress,
-                                left: (box.maxWidth - size) / 2,
-                                width: largeSize,
-                                height: largeSize,
-                                child: Transform.scale(
-                                  alignment: Alignment.topLeft,
-                                  scale: size / largeSize,
-                                  child: child,
+                            builder: (context, progress, child) =>
+                                ConversationMotion(
+                                  open: _voiceOpen,
+                                  builder: (context, voiceProgress, child) {
+                                    final targetSize =
+                                        78 + (voiceSize - 78) * voiceProgress;
+                                    final targetTop =
+                                        top +
+                                        2 +
+                                        (voiceTop - top - 2) * voiceProgress;
+                                    final size =
+                                        largeSize +
+                                        (targetSize - largeSize) * progress;
+                                    return Positioned(
+                                      top:
+                                          mascotTop +
+                                          (targetTop - mascotTop) * progress,
+                                      left: (box.maxWidth - size) / 2,
+                                      width: largeSize,
+                                      height: largeSize,
+                                      child: Transform.scale(
+                                        alignment: Alignment.topLeft,
+                                        scale: size / largeSize,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: child!,
                                 ),
-                              );
-                            },
                             child: Cloudy(
                               key: const ValueKey('home_mascot'),
                               size: largeSize,
@@ -322,7 +362,9 @@ class _PreparePageState extends State<PreparePage>
                             ),
                           ),
                           Positioned.fill(
-                            top: top + 92,
+                            top: _voiceOpen
+                                ? box.maxHeight - voicePanelHeight
+                                : top + 92,
                             child: ConversationMotion(
                               open: _chatOpen,
                               builder: (context, progress, child) {
@@ -343,12 +385,29 @@ class _PreparePageState extends State<PreparePage>
                                   ),
                                 );
                               },
-                              child: _ConversationBody(
-                                companion: companion,
-                                scroll: _chatScroll,
-                                onRetry: _reconnectVoice,
-                                onSupport: widget.onSupport,
-                              ),
+                              child: _voiceOpen
+                                  ? VoiceCompanionPanel(
+                                      key: const ValueKey(
+                                        'voice_companion_panel',
+                                      ),
+                                      companion: companion,
+                                      onMute: companion.toggleMute,
+                                      onEnd: _endVoice,
+                                      onChat: _showTextChat,
+                                      transcript: _ConversationBody(
+                                        companion: companion,
+                                        scroll: _chatScroll,
+                                        onRetry: _reconnectVoice,
+                                        onSupport: widget.onSupport,
+                                        voice: true,
+                                      ),
+                                    )
+                                  : _ConversationBody(
+                                      companion: companion,
+                                      scroll: _chatScroll,
+                                      onRetry: _reconnectVoice,
+                                      onSupport: widget.onSupport,
+                                    ),
                             ),
                           ),
                           IgnorePointer(
@@ -453,7 +512,7 @@ class _PreparePageState extends State<PreparePage>
                               ],
                             ),
                           ),
-                          if (_chatOpen)
+                          if (_chatOpen && !_voiceOpen)
                             Positioned(
                               top: top + 77,
                               left: 85,
@@ -479,15 +538,18 @@ class _PreparePageState extends State<PreparePage>
                   },
                 ),
               ),
-              CompanionComposer(
-                controller: _input,
-                focusNode: _focus,
-                companion: companion,
-                onSend: _send,
-                onVoice: _voice,
-                onStop: companion.stopSpeaking,
-                onPrompt: _sendPrompt,
-                showSuggestions: !_chatOpen,
+              Offstage(
+                offstage: _voiceOpen,
+                child: CompanionComposer(
+                  controller: _input,
+                  focusNode: _focus,
+                  companion: companion,
+                  onSend: _send,
+                  onVoice: _voice,
+                  onStop: companion.stopSpeaking,
+                  onPrompt: _sendPrompt,
+                  showSuggestions: !_chatOpen,
+                ),
               ),
             ],
           ),
@@ -531,8 +593,7 @@ class _FinancialSheet extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'FOR YOU, ${state.profile.name.toUpperCase()}',
-                      style: Theme.of(context).textTheme.labelMedium
-                          ?.copyWith(fontSize: 10, letterSpacing: 1),
+                      style: Theme.of(context).textTheme.labelMedium,
                     ),
                   ),
                   Expanded(
@@ -545,6 +606,9 @@ class _FinancialSheet extends StatelessWidget {
                   IconButton(
                     key: const ValueKey('expand_overview'),
                     tooltip: 'Expand or collapse your overview',
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(48, 48),
+                    ),
                     onPressed: () {
                       final scroll = PrimaryScrollController.maybeOf(context);
                       if (scroll != null &&
@@ -556,7 +620,7 @@ class _FinancialSheet extends StatelessWidget {
                     },
                     icon: const Icon(
                       CupertinoIcons.chevron_up_chevron_down,
-                      size: 14,
+                      size: 18,
                     ),
                   ),
                 ],
@@ -611,61 +675,76 @@ class _FinancialSheet extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
-              Divider(height: 1, color: AppColors.line(context)),
               const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.canvas(context),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      pressure == null
-                          ? 'A good moment to build a little more breathing room.'
-                          : 'There may be a tight week ahead. Let’s make a plan.',
-                      style: Theme.of(context).textTheme.bodyMedium,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final singleColumn =
+                      MediaQuery.textScalerOf(context).scale(16) > 22 ||
+                      constraints.maxWidth < 300;
+                  final tasks = [
+                    _OverviewTaskCard(
+                      key: const ValueKey('open_forecast'),
+                      icon: CupertinoIcons.chart_bar_alt_fill,
+                      title: 'Forecast',
+                      subtitle: 'See money coming in and going out',
+                      onPressed: () => openPage(context, const ForecastPage()),
                     ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 5,
-                      runSpacing: 4,
-                      children: [
-                        TextButton(
-                          key: const ValueKey('open_forecast'),
-                          onPressed: () =>
-                              openPage(context, const ForecastPage()),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AssistantColors.accent,
-                            backgroundColor: AppColors.surface(context),
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                          ),
-                          child: const Text(
-                            'See forecast',
-                            style: TextStyle(fontSize: 13),
+                    _OverviewTaskCard(
+                      key: const ValueKey('open_comparison'),
+                      icon: CupertinoIcons.arrow_left_right,
+                      title: 'Expected vs actual',
+                      subtitle: 'Look back at what changed',
+                      onPressed: () => openPage(
+                        context,
+                        const ForecastPage(initialLookBack: true),
+                      ),
+                    ),
+                    _OverviewTaskCard(
+                      key: const ValueKey('open_support'),
+                      icon: CupertinoIcons.heart,
+                      title: 'Get support',
+                      subtitle: state.recovery == null
+                          ? 'Make a plan'
+                          : 'Your saved support plan',
+                      onPressed: onSupport,
+                    ),
+                    _OverviewTaskCard(
+                      key: const ValueKey('open_savings'),
+                      icon: CupertinoIcons.leaf_arrow_circlepath,
+                      title: 'Savings goal',
+                      subtitle: state.goal == null
+                          ? 'Start your emergency buffer'
+                          : '${state.goal!.title} · ${formatPence(state.goal!.savedPence)} of ${formatPence(state.goal!.targetPence)} recorded',
+                      onPressed: onGrow,
+                    ),
+                  ];
+                  if (singleColumn) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      spacing: 10,
+                      children: tasks,
+                    );
+                  }
+                  return Column(
+                    spacing: 10,
+                    children: [
+                      for (var row = 0; row < 2; row++)
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            spacing: 10,
+                            children: [
+                              Expanded(child: tasks[row * 2]),
+                              Expanded(child: tasks[row * 2 + 1]),
+                            ],
                           ),
                         ),
-                        TextButton(
-                          onPressed: pressure == null ? onGrow : onSupport,
-                          child: Text(
-                            pressure == null ? 'Build a buffer' : 'Make a plan',
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                },
               ),
-              const SizedBox(height: 25),
-              SectionHeading(
-                'Your next 30 days',
-                action: 'Details',
-                onAction: () => openPage(context, const ForecastPage()),
-              ),
+              const SizedBox(height: 26),
+              const SectionHeading('Your next 30 days'),
               const SizedBox(height: 10),
               Row(
                 children: [
@@ -686,23 +765,6 @@ class _FinancialSheet extends StatelessWidget {
               const SizedBox(height: 19),
               ForecastChart(forecast: forecast, compact: true),
               const SizedBox(height: 20),
-              ActionRow(
-                icon: CupertinoIcons.heart,
-                title: state.recovery == null
-                    ? 'Make a support plan'
-                    : 'Your saved support plan',
-                subtitle: 'Practical help, in your own words',
-                onTap: onSupport,
-              ),
-              ActionRow(
-                icon: CupertinoIcons.leaf_arrow_circlepath,
-                title: state.goal?.title ?? 'Start your emergency buffer',
-                subtitle: state.goal == null
-                    ? 'Small steps, at your pace'
-                    : '${formatPence(state.goal!.savedPence)} of ${formatPence(state.goal!.targetPence)} recorded',
-                onTap: onGrow,
-              ),
-              const SizedBox(height: 22),
               SectionHeading(
                 'Coming up',
                 action: 'See all',
@@ -720,6 +782,46 @@ class _FinancialSheet extends StatelessWidget {
       ],
     );
   }
+}
+
+class _OverviewTaskCard extends StatelessWidget {
+  const _OverviewTaskCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onPressed,
+  });
+  final IconData icon;
+  final String title, subtitle;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => TextButton(
+    onPressed: onPressed,
+    style: TextButton.styleFrom(
+      minimumSize: const Size(48, 100),
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.all(15),
+      foregroundColor: AppColors.ink(context),
+      backgroundColor: AppColors.canvas(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: AppColors.line(context)),
+      ),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 22, color: AppColors.accent(context)),
+        const SizedBox(height: 10),
+        Text(title, style: Theme.of(context).textTheme.labelLarge),
+        const SizedBox(height: 4),
+        Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+  );
 }
 
 class _MoneyMetric extends StatelessWidget {
@@ -743,7 +845,9 @@ class _ConversationBody extends StatelessWidget {
     required this.scroll,
     required this.onRetry,
     required this.onSupport,
+    this.voice = false,
   });
+  final bool voice;
   final CompanionController companion;
   final ScrollController scroll;
   final VoidCallback onRetry, onSupport;
@@ -756,15 +860,17 @@ class _ConversationBody extends StatelessWidget {
     return ListView(
       key: const ValueKey('conversation_messages'),
       controller: scroll,
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 16),
+      padding: EdgeInsets.fromLTRB(22, voice ? 8 : 22, 22, 16),
       children: [
-        if (companion.messages.isEmpty && !busy)
+        if (companion.messages.isEmpty && !busy && companion.error == null)
           Padding(
             padding: const EdgeInsets.only(top: 24),
             child: Text(
-              'I’m here. What’s on your mind?',
+              voice
+                  ? 'Your conversation will appear here.'
+                  : 'I’m here. What’s on your mind?',
               style: TextStyle(
-                fontSize: 22,
+                fontSize: voice ? 14 : 22,
                 fontWeight: FontWeight.w400,
                 height: 1.4,
                 color: dark ? const Color(0xFFF0F6FC) : AssistantColors.ink,
@@ -826,7 +932,7 @@ class _ConversationBody extends StatelessWidget {
               ),
             ),
           ),
-        if (companion.messages.isNotEmpty)
+        if (companion.messages.isNotEmpty && !voice)
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton(

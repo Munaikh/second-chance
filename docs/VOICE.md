@@ -14,7 +14,15 @@ No API key is bundled or required on the device. Override the public agent with 
 
 Text uses ElevenLabs' documented WebSocket protocol with a text-only session override. It never opens a microphone. This is deliberate: Flutter SDK 0.6.1 enables microphone capture even when its text-only conversation override is true. The dedicated agent allows only the text-only override, not client replacement of its system prompt.
 
-The app sends the active profile, dated calculated forecast, scenario and goal as contextual updates. It converts every integer-pence field into an exact formatted GBP string before sending model context, so the language model does not perform currency-unit arithmetic. It supplies the last twelve visible live conversation messages when moving between text and voice sessions. Changing the selected demo profile ends the connection and clears the transcript. The agent cannot change finances or submit drafts; n8n recovery is a separate explicit app action.
+The app sends the active profile, dated calculated forecast, scenario and goal as contextual updates. It converts every integer-pence field into an exact formatted GBP string before sending model context, so the language model does not perform currency-unit arithmetic. It supplies the last twelve visible live conversation messages when moving between text and voice sessions. Changing the selected demo profile ends the connection and clears the transcript. Cloudy can now request the validated app actions described below; it cannot change bank balances or submit drafts.
+
+## Actions in the conversation
+
+Four client tools are registered in the Flutter voice SDK and text WebSocket client: `update_scenario`, `build_recovery_plan`, `set_emergency_goal` and `compare_history`. Their definitions and remote IDs are in `integrations/elevenlabs/client-tools.json`. The client returns a result with the matching tool-call ID; the model waits for the result before reporting success. Scenario calculations remain in integer pence, recovery genuinely runs n8n, goal progress is preserved, and historical comparisons remain explicitly synthetic. Existing goals and edited plans require confirmation before replacement. Text tool calls are deduplicated by call ID, and tool execution pauses the ordinary reply timeout.
+
+Action cards show the calculated outcome directly in chat. A completed recovery plan includes its sources and an editable, autosaved draft with Copy. Voice mode uses the upper two-thirds for Cloudy and the lower third for controls and transcript; Chat preserves the same session and messages.
+
+The opt-in live app-state test completed all four tool calls through Gemini 3.8 Flash: a £150 repair produced a £330 gap, n8n execution `10` produced the draft, a £500 goal retained £35, and the historical comparison returned its reconstructed/synthetic disclosure. Evidence: `integrations/elevenlabs/app-actions-verification.json`. This check uses isolated synthetic preferences rather than the phone's saved progress.
 
 “Stop voice playback” ends the voice session immediately, which stops microphone capture and output. The official SDK does not expose an independent output-pause API. Starting voice again retains the visible conversation through a contextual update. Mute controls input; it does not pause Cloudy's output.
 

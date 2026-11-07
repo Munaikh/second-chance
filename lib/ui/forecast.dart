@@ -11,13 +11,14 @@ import 'package:second_chance/ui/history_comparison.dart';
 import 'package:second_chance/ui/support.dart';
 
 class ForecastPage extends StatefulWidget {
-  const ForecastPage({super.key});
+  const ForecastPage({super.key, this.initialLookBack = false});
+  final bool initialLookBack;
   @override
   State<ForecastPage> createState() => _ForecastPageState();
 }
 
 class _ForecastPageState extends State<ForecastPage> {
-  bool _lookBack = false;
+  late bool _lookBack = widget.initialLookBack;
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);

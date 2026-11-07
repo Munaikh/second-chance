@@ -4,9 +4,13 @@ Checks completed on 7 November 2026 using Flutter 3.47.9, Dart 3.13.7 and Xcode 
 
 ## Phone voice, motion and time travel
 
-Current checks: `flutter analyze` has no issues; all **58 Flutter tests** pass.
+Current checks: `flutter analyze` has no issues; all **90 offline Flutter tests** pass. The separate opt-in live app-action test also passes against Gemini 3.8 Flash and real n8n execution `10`.
 
 The latest phone build uses Motor for the shared Cloudy/greeting transition and spring-driven sheet exit, preserves the mounted conversation and draft, and removes the redundant hamburger menu. Forecast, support and savings remain reachable through the sheet; chat Back and profile controls remain available. Reduced motion snaps to the selected state.
+
+The dedicated listening layout keeps a large Cloudy above a lower control/transcript panel. Voice/Chat switching retains the same session, messages and unsent input; Mute, End and Chat remain reachable at 390px and 2× text. The UX pass puts four named sheet tasks before the chart and switches them to a single column for large text. These are layout/accessibility checks, not demographic usability or VoiceOver acceptance.
+
+Four client actions now execute within the conversation, with validation and replacement confirmation. Both SDK voice handlers and text protocol handling are covered, including call-ID deduplication, long-running recovery timeouts and editable inline drafts. The live test used the real AppState handler for all four actions, with isolated synthetic persistence; it did not alter the user's phone data.
 
 Forecast lines now use bounded cubic curves through daily closing values, with paired exact balances and differences at the selected date. Expected vs actual reconstructs 10 October–6 November using only the preceding four synthetic demo weeks, then compares it with held-out synthetic recorded balances. It does not represent an archived forecast, future actuals or prediction-accuracy evidence.
 

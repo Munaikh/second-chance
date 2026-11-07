@@ -4,6 +4,10 @@ A kinder path through financial setbacks. A voice and chat first Flutter compani
 
 Cloudy, an animated cloud, lives on Home and peeks over a draggable financial sheet. Controlled Lottie segments give Cloudy a gentle idle blink, attentive listening and expressive speaking; reduced motion freezes the character. Talk by tapping Cloudy or the microphone, or type into the persistent composer. A Motor spring moves the sheet away and carries Cloudy into the conversation header. Drag the sheet up for forecast, support and savings; every destination is available there. All customer records are synthetic; all amounts are GBP.
 
+Voice mode gives Cloudy the upper two-thirds of the screen, with Mute, End, Chat and a scrolling transcript below. Chat switches presentation while preserving the session and draft. The financial sheet puts four labelled tasks first: Forecast, Expected vs actual, Get support and Savings goal; large text uses a single column.
+
+Cloudy can carry out requests through four client tools: model a what-if, prepare a real n8n support plan and editable draft, create a savings goal, and compare historical balances. Results appear inside the conversation. Existing goals and drafts require confirmation before replacement; recorded savings are preserved. These actions do not transfer money or send requests externally.
+
 ## Run
 
 Checked toolchain: Flutter 3.47.9 / Dart 3.13.7, Node 26, Xcode 27.2. Use Node 24+ and a booted iOS Simulator.
@@ -79,6 +83,7 @@ flutter test
 node --test server/test/*.test.mjs
 node scripts/check-integration.mjs
 node integrations/elevenlabs/verify.mjs
+flutter test test/live/companion_actions_live_test.dart --dart-define=RUN_LIVE_AGENT_TESTS=true --dart-define=API_BASE_URL=http://127.0.0.1:8787
 ```
 
 See [voice setup](docs/VOICE.md), [n8n setup](docs/INTEGRATIONS.md) and [validation limits](docs/VALIDATION.md). Text chat needs no microphone permission. Production authentication, cloud hosting and physical-device acceptance remain follow-on work.

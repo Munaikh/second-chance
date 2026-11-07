@@ -1,0 +1,821 @@
+{
+  "checkedAt": "2026-11-07T17:34:23.877958Z",
+  "agentId": "agent_8301m6v7kzdgfza9119295h54skt",
+  "model": "gemini-3.8-flash",
+  "synthetic": true,
+  "realAppState": true,
+  "realN8n": true,
+  "actions": [
+    {
+      "request": "Please calculate what an extra £150 car repair bill would do to my forecast, using the demo date.",
+      "action": "update_scenario",
+      "reply": "Adding an unexpected £150 expense on the demo date of 10 November 2026 brings your first projected shortfall on 12 November 2026 to £330.\n\nThe pressure comes from your £650 rent and £45 energy instalment due on 12 November before your next delivery payment of £380 on 14 November.\n\nWould you like to model a spending reduction or look into building a recovery plan to help manage this?",
+      "result": {
+        "ok": true,
+        "action": "update_scenario",
+        "profileId": "noor",
+        "summary": "I updated your scenario. The first projected shortfall is £330 on 12 Nov.",
+        "artifact": {
+          "profileId": "noor",
+          "type": "forecast",
+          "scenario": {
+            "incomePercentChange": 0.0,
+            "unexpectedExpenseGBP": "£150",
+            "weeklySavingGBP": "£0",
+            "unexpectedExpenseDate": "2026-11-10"
+          },
+          "forecast": {
+            "asOf": "2026-11-07",
+            "horizonDays": 30,
+            "openingBalanceGBP": "£485",
+            "endingBalanceGBP": "£818",
+            "lowestDay": {
+              "date": "2026-11-12",
+              "balanceGBP": "£-330",
+              "movements": [
+                {
+                  "id": "n05",
+                  "date": "2026-11-12",
+                  "label": "Rent",
+                  "amountGBP": "£-650",
+                  "category": "rent",
+                  "isEstimate": true
+                },
+                {
+                  "id": "n06",
+                  "date": "2026-11-12",
+                  "label": "Energy instalment",
+                  "amountGBP": "£-45",
+                  "category": "energy",
+                  "isEstimate": true
+                }
+              ]
+            },
+            "firstShortfall": {
+              "date": "2026-11-12",
+              "balanceGBP": "£-330",
+              "movements": [
+                {
+                  "id": "n05",
+                  "date": "2026-11-12",
+                  "label": "Rent",
+                  "amountGBP": "£-650",
+                  "category": "rent",
+                  "isEstimate": true
+                },
+                {
+                  "id": "n06",
+                  "date": "2026-11-12",
+                  "label": "Energy instalment",
+                  "amountGBP": "£-45",
+                  "category": "energy",
+                  "isEstimate": true
+                }
+              ]
+            },
+            "shortfallGBP": "£330",
+            "pressureCauses": [
+              "Rent: £650 on 12 Nov.",
+              "Energy instalment: £45 on 12 Nov.",
+              "Next expected income: £380 on 14 Nov."
+            ],
+            "days": [
+              {
+                "date": "2026-11-07",
+                "balanceGBP": "£425",
+                "movements": [
+                  {
+                    "id": "n01",
+                    "date": "2026-11-07",
+                    "label": "Groceries",
+                    "amountGBP": "£-45",
+                    "category": "groceries",
+                    "isEstimate": true
+                  },
+                  {
+                    "id": "n02",
+                    "date": "2026-11-07",
+                    "label": "Work travel",
+                    "amountGBP": "£-15",
+                    "category": "travel",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-08",
+                "balanceGBP": "£425",
+                "movements": []
+              },
+              {
+                "date": "2026-11-09",
+                "balanceGBP": "£575",
+                "movements": [
+                  {
+                    "id": "n03",
+                    "date": "2026-11-09",
+                    "label": "Delivery payment",
+                    "amountGBP": "£150",
+                    "category": "income",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-10",
+                "balanceGBP": "£365",
+                "movements": [
+                  {
+                    "id": "n04",
+                    "date": "2026-11-10",
+                    "label": "Childcare",
+                    "amountGBP": "£-60",
+                    "category": "childcare",
+                    "isEstimate": true
+                  },
+                  {
+                    "id": "scenario-expense",
+                    "date": "2026-11-10",
+                    "label": "Unexpected expense (what if)",
+                    "amountGBP": "£-150",
+                    "category": "unexpected",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-11",
+                "balanceGBP": "£365",
+                "movements": []
+              },
+              {
+                "date": "2026-11-12",
+                "balanceGBP": "£-330",
+                "movements": [
+                  {
+                    "id": "n05",
+                    "date": "2026-11-12",
+                    "label": "Rent",
+                    "amountGBP": "£-650",
+                    "category": "rent",
+                    "isEstimate": true
+                  },
+                  {
+                    "id": "n06",
+                    "date": "2026-11-12",
+                    "label": "Energy instalment",
+                    "amountGBP": "£-45",
+                    "category": "energy",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-13",
+                "balanceGBP": "£-330",
+                "movements": []
+              },
+              {
+                "date": "2026-11-14",
+                "balanceGBP": "£-5",
+                "movements": [
+                  {
+                    "id": "n07",
+                    "date": "2026-11-14",
+                    "label": "Delivery payment",
+                    "amountGBP": "£380",
+                    "category": "income",
+                    "isEstimate": true
+                  },
+                  {
+                    "id": "n08",
+                    "date": "2026-11-14",
+                    "label": "Groceries",
+                    "amountGBP": "£-55",
+                    "category": "groceries",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-15",
+                "balanceGBP": "£-5",
+                "movements": []
+              },
+              {
+                "date": "2026-11-16",
+                "balanceGBP": "£-115",
+                "movements": [
+                  {
+                    "id": "n09",
+                    "date": "2026-11-16",
+                    "label": "Childcare",
+                    "amountGBP": "£-110",
+                    "category": "childcare",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-17",
+                "balanceGBP": "£-144",
+                "movements": [
+                  {
+                    "id": "n10",
+                    "date": "2026-11-17",
+                    "label": "Broadband",
+                    "amountGBP": "£-29",
+                    "category": "broadband",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-18",
+                "balanceGBP": "£-144",
+                "movements": []
+              },
+              {
+                "date": "2026-11-19",
+                "balanceGBP": "£-144",
+                "movements": []
+              },
+              {
+                "date": "2026-11-20",
+                "balanceGBP": "£281",
+                "movements": [
+                  {
+                    "id": "n11",
+                    "date": "2026-11-20",
+                    "label": "Delivery payment",
+                    "amountGBP": "£480",
+                    "category": "income",
+                    "isEstimate": true
+                  },
+                  {
+                    "id": "n12",
+                    "date": "2026-11-20",
+                    "label": "Groceries",
+                    "amountGBP": "£-55",
+                    "category": "groceries",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-21",
+                "balanceGBP": "£281",
+                "movements": []
+              },
+              {
+                "date": "2026-11-22",
+                "balanceGBP": "£138",
+                "movements": [
+                  {
+                    "id": "n13",
+                    "date": "2026-11-22",
+                    "label": "Council tax",
+                    "amountGBP": "£-98",
+                    "category": "councilTax",
+                    "isEstimate": true
+                  },
+                  {
+                    "id": "n14",
+                    "date": "2026-11-22",
+                    "label": "Card minimum payment",
+                    "amountGBP": "£-45",
+                    "category": "debt",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-23",
+                "balanceGBP": "£102",
+                "movements": [
+                  {
+                    "id": "n15",
+                    "date": "2026-11-23",
+                    "label": "Work travel",
+                    "amountGBP": "£-18",
+                    "category": "travel",
+                    "isEstimate": true
+                  },
+                  {
+                    "id": "n16",
+                    "date": "2026-11-23",
+                    "label": "Mobile",
+                    "amountGBP": "£-18",
+                    "category": "phone",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-24",
+                "balanceGBP": "£-8",
+                "movements": [
+                  {
+                    "id": "n17",
+                    "date": "2026-11-24",
+                    "label": "Childcare",
+                    "amountGBP": "£-110",
+                    "category": "childcare",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-25",
+                "balanceGBP": "£-8",
+                "movements": []
+              },
+              {
+                "date": "2026-11-26",
+                "balanceGBP": "£-8",
+                "movements": []
+              },
+              {
+                "date": "2026-11-27",
+                "balanceGBP": "£237",
+                "movements": [
+                  {
+                    "id": "n18",
+                    "date": "2026-11-27",
+                    "label": "Delivery payment",
+                    "amountGBP": "£300",
+                    "category": "income",
+                    "isEstimate": true
+                  },
+                  {
+                    "id": "n19",
+                    "date": "2026-11-27",
+                    "label": "Groceries",
+                    "amountGBP": "£-55",
+                    "category": "groceries",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-28",
+                "balanceGBP": "£213",
+                "movements": [
+                  {
+                    "id": "n20",
+                    "date": "2026-11-28",
+                    "label": "Contents insurance",
+                    "amountGBP": "£-24",
+                    "category": "insurance",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-11-29",
+                "balanceGBP": "£213",
+                "movements": []
+              },
+              {
+                "date": "2026-11-30",
+                "balanceGBP": "£213",
+                "movements": []
+              },
+              {
+                "date": "2026-12-01",
+                "balanceGBP": "£153",
+                "movements": [
+                  {
+                    "id": "n21",
+                    "date": "2026-12-01",
+                    "label": "Energy instalment",
+                    "amountGBP": "£-45",
+                    "category": "energy",
+                    "isEstimate": true
+                  },
+                  {
+                    "id": "n22",
+                    "date": "2026-12-01",
+                    "label": "Work travel",
+                    "amountGBP": "£-15",
+                    "category": "travel",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-12-02",
+                "balanceGBP": "£153",
+                "movements": []
+              },
+              {
+                "date": "2026-12-03",
+                "balanceGBP": "£633",
+                "movements": [
+                  {
+                    "id": "n23",
+                    "date": "2026-12-03",
+                    "label": "Household benefit payment",
+                    "amountGBP": "£480",
+                    "category": "benefits",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-12-04",
+                "balanceGBP": "£818",
+                "movements": [
+                  {
+                    "id": "n24",
+                    "date": "2026-12-04",
+                    "label": "Delivery payment",
+                    "amountGBP": "£240",
+                    "category": "income",
+                    "isEstimate": true
+                  },
+                  {
+                    "id": "n25",
+                    "date": "2026-12-04",
+                    "label": "Groceries",
+                    "amountGBP": "£-55",
+                    "category": "groceries",
+                    "isEstimate": true
+                  }
+                ]
+              },
+              {
+                "date": "2026-12-05",
+                "balanceGBP": "£818",
+                "movements": []
+              },
+              {
+                "date": "2026-12-06",
+                "balanceGBP": "£818",
+                "movements": []
+              }
+            ],
+            "entries": [
+              {
+                "id": "n01",
+                "date": "2026-11-07",
+                "label": "Groceries",
+                "amountGBP": "£-45",
+                "category": "groceries",
+                "isEstimate": true
+              },
+              {
+                "id": "n02",
+                "date": "2026-11-07",
+                "label": "Work travel",
+                "amountGBP": "£-15",
+                "category": "travel",
+                "isEstimate": true
+              },
+              {
+                "id": "n03",
+                "date": "2026-11-09",
+                "label": "Delivery payment",
+                "amountGBP": "£150",
+                "category": "income",
+                "isEstimate": true
+              },
+              {
+                "id": "n04",
+                "date": "2026-11-10",
+                "label": "Childcare",
+                "amountGBP": "£-60",
+                "category": "childcare",
+                "isEstimate": true
+              },
+              {
+                "id": "scenario-expense",
+                "date": "2026-11-10",
+                "label": "Unexpected expense (what if)",
+                "amountGBP": "£-150",
+                "category": "unexpected",
+                "isEstimate": true
+              },
+              {
+                "id": "n05",
+                "date": "2026-11-12",
+                "label": "Rent",
+                "amountGBP": "£-650",
+                "category": "rent",
+                "isEstimate": true
+              },
+              {
+                "id": "n06",
+                "date": "2026-11-12",
+                "label": "Energy instalment",
+                "amountGBP": "£-45",
+                "category": "energy",
+                "isEstimate": true
+              },
+              {
+                "id": "n07",
+                "date": "2026-11-14",
+                "label": "Delivery payment",
+                "amountGBP": "£380",
+                "category": "income",
+                "isEstimate": true
+              },
+              {
+                "id": "n08",
+                "date": "2026-11-14",
+                "label": "Groceries",
+                "amountGBP": "£-55",
+                "category": "groceries",
+                "isEstimate": true
+              },
+              {
+                "id": "n09",
+                "date": "2026-11-16",
+                "label": "Childcare",
+                "amountGBP": "£-110",
+                "category": "childcare",
+                "isEstimate": true
+              },
+              {
+                "id": "n10",
+                "date": "2026-11-17",
+                "label": "Broadband",
+                "amountGBP": "£-29",
+                "category": "broadband",
+                "isEstimate": true
+              },
+              {
+                "id": "n11",
+                "date": "2026-11-20",
+                "label": "Delivery payment",
+                "amountGBP": "£480",
+                "category": "income",
+                "isEstimate": true
+              },
+              {
+                "id": "n12",
+                "date": "2026-11-20",
+                "label": "Groceries",
+                "amountGBP": "£-55",
+                "category": "groceries",
+                "isEstimate": true
+              },
+              {
+                "id": "n13",
+                "date": "2026-11-22",
+                "label": "Council tax",
+                "amountGBP": "£-98",
+                "category": "councilTax",
+                "isEstimate": true
+              },
+              {
+                "id": "n14",
+                "date": "2026-11-22",
+                "label": "Card minimum payment",
+                "amountGBP": "£-45",
+                "category": "debt",
+                "isEstimate": true
+              },
+              {
+                "id": "n15",
+                "date": "2026-11-23",
+                "label": "Work travel",
+                "amountGBP": "£-18",
+                "category": "travel",
+                "isEstimate": true
+              },
+              {
+                "id": "n16",
+                "date": "2026-11-23",
+                "label": "Mobile",
+                "amountGBP": "£-18",
+                "category": "phone",
+                "isEstimate": true
+              },
+              {
+                "id": "n17",
+                "date": "2026-11-24",
+                "label": "Childcare",
+                "amountGBP": "£-110",
+                "category": "childcare",
+                "isEstimate": true
+              },
+              {
+                "id": "n18",
+                "date": "2026-11-27",
+                "label": "Delivery payment",
+                "amountGBP": "£300",
+                "category": "income",
+                "isEstimate": true
+              },
+              {
+                "id": "n19",
+                "date": "2026-11-27",
+                "label": "Groceries",
+                "amountGBP": "£-55",
+                "category": "groceries",
+                "isEstimate": true
+              },
+              {
+                "id": "n20",
+                "date": "2026-11-28",
+                "label": "Contents insurance",
+                "amountGBP": "£-24",
+                "category": "insurance",
+                "isEstimate": true
+              },
+              {
+                "id": "n21",
+                "date": "2026-12-01",
+                "label": "Energy instalment",
+                "amountGBP": "£-45",
+                "category": "energy",
+                "isEstimate": true
+              },
+              {
+                "id": "n22",
+                "date": "2026-12-01",
+                "label": "Work travel",
+                "amountGBP": "£-15",
+                "category": "travel",
+                "isEstimate": true
+              },
+              {
+                "id": "n23",
+                "date": "2026-12-03",
+                "label": "Household benefit payment",
+                "amountGBP": "£480",
+                "category": "benefits",
+                "isEstimate": true
+              },
+              {
+                "id": "n24",
+                "date": "2026-12-04",
+                "label": "Delivery payment",
+                "amountGBP": "£240",
+                "category": "income",
+                "isEstimate": true
+              },
+              {
+                "id": "n25",
+                "date": "2026-12-04",
+                "label": "Groceries",
+                "amountGBP": "£-55",
+                "category": "groceries",
+                "isEstimate": true
+              }
+            ],
+            "calculation": "Opening balance plus signed dated cash movements; daily closing balance.",
+            "assumptions": [
+              "Synthetic customer data. The demo clock is fixed at 7 November 2026.",
+              "Daily closing balances for 7 November–6 December; payment order within a day is unknown.",
+              "Expected income and future spending may change. No overdraft, interest or lending is assumed.",
+              "Income changes affect expected earnings, not benefits. Extra costs occur on 10 November.",
+              "Weekly savings reduce modelled groceries, travel and household spending, capped at that spending."
+            ]
+          },
+          "unexpectedExpenseDate": "2026-11-10",
+          "assumptions": [
+            "Synthetic customer data. The demo clock is fixed at 7 November 2026.",
+            "Daily closing balances for 7 November–6 December; payment order within a day is unknown.",
+            "Expected income and future spending may change. No overdraft, interest or lending is assumed.",
+            "Income changes affect expected earnings, not benefits. Extra costs occur on 10 November.",
+            "Weekly savings reduce modelled groceries, travel and household spending, capped at that spending."
+          ]
+        }
+      }
+    },
+    {
+      "request": "Please create a recovery plan and an editable support request for this unexpected bill.",
+      "action": "build_recovery_plan",
+      "reply": "I have prepared your recovery plan and an editable support request draft directly in the conversation.\n\nIt focuses on your estimated £330 shortfall on 12 November 2026, protecting your essential bills first, and asking your provider early about affordable options. Nothing has been sent externally, so you can review and adjust the details whenever you are ready.\n\nWould you like to review the draft details together or look at any other adjustments to your budget?",
+      "result": {
+        "ok": true,
+        "action": "build_recovery_plan",
+        "profileId": "noor",
+        "summary": "Let’s plan around the estimated £330.00 gap on 12 November 2026. Start with the essentials, then ask for support.",
+        "artifact": {
+          "profileId": "noor",
+          "type": "recovery_plan",
+          "title": "A little breathing room, one step at a time",
+          "summary": "Let’s plan around the estimated £330.00 gap on 12 November 2026. Start with the essentials, then ask for support.",
+          "executionId": "10",
+          "steps": [
+            {
+              "id": "protect-essentials",
+              "title": "Protect the essentials first",
+              "detail": "Your planned essential costs over the next 30 days are £1,547.00. Check rent or mortgage, energy, Council Tax and food before deciding what is affordable. If essentials are at risk, use MoneyHelper’s free debt-advice finder."
+            },
+            {
+              "id": "check-budget",
+              "title": "Check the dates and amounts",
+              "detail": "The forecast suggests a £330.00 gap on 12 November 2026. Confirm expected income and bill dates. The main pressures are Rent: £650 on 12 Nov.; Energy instalment: £45 on 12 Nov.; Next expected income: £380 on 14 Nov.."
+            },
+            {
+              "id": "ask-support",
+              "title": "Ask about support before the payment",
+              "detail": "Review the request below and contact the relevant provider through its official channel. Ask which affordable options exist and how they could affect interest, charges and your credit file. Do not stop or change payments without discussing the consequences."
+            },
+            {
+              "id": "follow-up",
+              "title": "Keep a record and check back",
+              "detail": "Save the reply and any agreed dates. If your income or bills change, update the forecast. Support, fee changes and payment arrangements require the provider’s agreement; this draft makes no eligibility promise."
+            }
+          ],
+          "sources": [
+            {
+              "title": "MoneyHelper · Help if you’re struggling to pay your bills",
+              "url": "https://www.moneyhelper.org.uk/en/everyday-money/credit/struggling-to-pay-your-gas-or-electricity-bill",
+              "excerpt": "Speak with the organisation you owe before a payment is missed. Review essential bills and ask what affordable support is available."
+            },
+            {
+              "title": "FCA · Support when money is tight",
+              "url": "https://www.fca.org.uk/consumers/financial-impact-rising-costs-living",
+              "excerpt": "Contact your provider early. Support depends on your circumstances; ask how a proposed arrangement would affect your credit file."
+            },
+            {
+              "title": "NatWest · Help with money worries",
+              "url": "https://www.natwest.com/support-centre/payments/general/im-struggling-with-my-bills-how-can-you-help.html",
+              "excerpt": "NatWest offers a conversation about financial concerns and available support. Use its official support page to contact the bank."
+            }
+          ],
+          "evidence": [
+            "Checked income and expenditure summary",
+            "Recent statements or payslips showing the income change",
+            "The bill or payment notice, including its date and reference",
+            "Any relevant messages from the provider"
+          ],
+          "knownFacts": [
+            "Synthetic profile: Noor.",
+            "Demo current account balance: £485.00.",
+            "Expected income over the next 30 days: £2,030.00; planned essential costs over the next 30 days: £1,547.00.",
+            "Calculated forecast gap: £330.00 on 12 November 2026.",
+            "The extra note is user-provided and has not been independently verified."
+          ],
+          "assumptions": [
+            "All customer figures are synthetic demo data; future income, spending and payment dates may change.",
+            "The forecast is a scenario estimate, not a bank balance guarantee or a credit decision.",
+            "A provider has not agreed to a change, waived fees or confirmed eligibility.",
+            "This is a rules-based personalised draft from n8n, not regulated debt advice or a submitted request."
+          ],
+          "draft": {
+            "subject": "Request for support with an upcoming payment",
+            "body": "Dear Financial Support Team,\n\nI would like to discuss support before I miss a payment. I am experiencing an unexpected bill, and my current budget shows an estimated £330.00 cash-flow gap on 12 November 2026.\n\nMy expected income over the next 30 days is £2,030.00 and my planned essential costs over the next 30 days are £1,547.00. My current account balance is £485.00. These figures come from a demo forecast and must be checked before this letter is used.\n\nAdditional information I would like you to consider: £150 car repair bill on 10 November 2026 leading to a projected £330 shortfall on 12 November 2026.\n\nPlease help me review affordable options, including whether the payment date or amount can be adjusted. Please explain any effect on interest, fees, my credit file and future payments before I agree to a change. I am not asking to cancel a payment without discussing the consequences.\n\nI can provide a checked income-and-expenditure summary and relevant statements. Please let me know what else you need and confirm any agreed arrangement in writing.\n\nMy account/reference: [add securely]\nPreferred contact method: [add]\n\nKind regards,\nNoor",
+            "recipient": "Your bank or bill provider’s financial support team"
+          },
+          "draftSubject": "Request for support with an upcoming payment",
+          "draftBody": "Dear Financial Support Team,\n\nI would like to discuss support before I miss a payment. I am experiencing an unexpected bill, and my current budget shows an estimated £330.00 cash-flow gap on 12 November 2026.\n\nMy expected income over the next 30 days is £2,030.00 and my planned essential costs over the next 30 days are £1,547.00. My current account balance is £485.00. These figures come from a demo forecast and must be checked before this letter is used.\n\nAdditional information I would like you to consider: £150 car repair bill on 10 November 2026 leading to a projected £330 shortfall on 12 November 2026.\n\nPlease help me review affordable options, including whether the payment date or amount can be adjusted. Please explain any effect on interest, fees, my credit file and future payments before I agree to a change. I am not asking to cancel a payment without discussing the consequences.\n\nI can provide a checked income-and-expenditure summary and relevant statements. Please let me know what else you need and confirm any agreed arrangement in writing.\n\nMy account/reference: [add securely]\nPreferred contact method: [add]\n\nKind regards,\nNoor",
+          "nothingSent": true
+        },
+        "persisted": true
+      }
+    },
+    {
+      "request": "Please create a savings goal called Road trip buffer with a target of £500.",
+      "action": "set_emergency_goal",
+      "reply": "Your savings goal Road trip buffer has been set with a target of £500, keeping your existing £35 recorded savings intact.\n\nThis updates your target inside Raise and does not move any real money.\n\nWould you like to model a weekly spending reduction to see how it could help you build towards this buffer?",
+      "result": {
+        "ok": true,
+        "action": "set_emergency_goal",
+        "profileId": "noor",
+        "summary": "Road trip buffer is set to £500. Your recorded £35 is kept. No money has moved.",
+        "artifact": {
+          "profileId": "noor",
+          "type": "goal",
+          "title": "Road trip buffer",
+          "targetGBP": "£500",
+          "savedGBP": "£35",
+          "progress": 0.07,
+          "nothingTransferred": true
+        },
+        "persisted": true
+      }
+    },
+    {
+      "request": "Please compare my historical expected and actual balances and tell me the difference.",
+      "action": "compare_history",
+      "reply": "Between 10 October and 6 November 2026, your reconstructed expected ending balance was £1695, while your synthetic actual ending balance was £485, leaving a difference of £-1210.\n\nThis estimate was reconstructed from the preceding four demo weeks rather than an archived forecast, and the actuals are synthetic records.\n\nWould you like to explore what-if options to see how adjusting flexible spending might help steady your upcoming cash flow?",
+      "result": {
+        "ok": true,
+        "action": "compare_history",
+        "profileId": "noor",
+        "summary": "From 10 October to 6 November, the reconstructed estimate ends at £1,695 and synthetic actuals end at £485. The estimate is reconstructed from the prior four demo weeks. Actuals are synthetic records, not real customer data or forecast accuracy evidence.",
+        "artifact": {
+          "profileId": "noor",
+          "type": "history_comparison",
+          "startDate": "2026-10-10",
+          "endDate": "2026-11-06",
+          "openingBalanceGBP": "£1381",
+          "expectedEndingBalanceGBP": "£1695",
+          "actualEndingBalanceGBP": "£485",
+          "varianceGBP": "£-1210",
+          "disclosure": "The estimate is reconstructed from the prior four demo weeks. Actuals are synthetic records, not real customer data or forecast accuracy evidence.",
+          "futureActualsAvailable": false
+        },
+        "persisted": true
+      }
+    }
+  ],
+  "conversationId": "conv_3001m6vh6s8febeayr6p4ttem2vv",
+  "passed": true
+}

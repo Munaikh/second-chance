@@ -1,0 +1,119 @@
+[
+  {
+    "id": "tool_3601m6vghyjef018b4t16j76b38k",
+    "tool_config": {
+      "type": "client",
+      "name": "update_scenario",
+      "description": "Calculate the user's requested what-if change inside Raise and return exact dated forecast figures. Use for an extra bill, changed earnings, weekly spending reduction, or resetting a scenario. Amounts are GBP, never pence. This models estimates only; it does not move money. The demo one-off bill date is 10 November 2026.",
+      "expects_response": true,
+      "response_timeout_secs": 30,
+      "execution_mode": "immediate",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "income_change_percent": {
+            "type": "number",
+            "description": "Requested earnings change from -40 to 40 percent. Omit to preserve the current setting."
+          },
+          "unexpected_expense_gbp": {
+            "type": "number",
+            "description": "Requested one-off expense from 0 to 400 GBP, modelled on 10 November 2026. Omit to preserve the current setting."
+          },
+          "weekly_spending_reduction_gbp": {
+            "type": "number",
+            "description": "Requested reduction of flexible spending from 0 to 40 GBP per week. Omit to preserve the current setting."
+          },
+          "reset": {
+            "type": "boolean",
+            "description": "Set true only when the user asks to reset the what-if scenario."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "id": "tool_3901m6vgj703em1b1s3ksj17fsnx",
+    "tool_config": {
+      "type": "client",
+      "name": "build_recovery_plan",
+      "description": "Create the user's personalised support plan and editable request draft inside Raise using its live recovery workflow. Use when the user asks for a plan or support request, not to send anything externally. Wait for the returned plan and execution result before claiming completion. Replacing an existing plan or edited draft requires explicit user confirmation.",
+      "expects_response": true,
+      "response_timeout_secs": 60,
+      "execution_mode": "immediate",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "hardship": {
+            "type": "string",
+            "description": "The user's stated situation: income_drop, unexpected_bill, or complaint.",
+            "enum": [
+              "income_drop",
+              "unexpected_bill",
+              "complaint"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "description": "Optional short synthetic context supplied by the user, at most 500 characters; never request secrets."
+          },
+          "replace_existing": {
+            "type": "boolean",
+            "description": "True only after the user explicitly agrees to replace the existing plan or edited draft; otherwise omit or false."
+          }
+        },
+        "required": [
+          "hardship"
+        ]
+      }
+    }
+  },
+  {
+    "id": "tool_0401m6vgj8dcfxwvggrea8gdcba4",
+    "tool_config": {
+      "type": "client",
+      "name": "set_emergency_goal",
+      "description": "Create an emergency-buffer or resilience savings goal in Raise when the user requests it and supplies a target. This records a goal, not a bank transfer or actual contribution. Existing recorded savings are preserved. Replacing an existing goal requires explicit user confirmation.",
+      "expects_response": true,
+      "response_timeout_secs": 30,
+      "execution_mode": "immediate",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The user's goal name, from 1 to 60 characters."
+          },
+          "target_gbp": {
+            "type": "number",
+            "description": "Requested savings target in GBP, from 1 to 100000. Never pass pence."
+          },
+          "replace_existing": {
+            "type": "boolean",
+            "description": "True only after the user explicitly agrees to replace the existing goal; otherwise omit or false."
+          }
+        },
+        "required": [
+          "title",
+          "target_gbp"
+        ]
+      }
+    }
+  },
+  {
+    "id": "tool_4901m6vgjbx9fbqs6de72vsnvgwc",
+    "tool_config": {
+      "type": "client",
+      "name": "compare_history",
+      "description": "Compare the expected historical pattern with synthetic recorded balances for the selected Raise profile. Returns exact expected, actual and difference figures for 10 October–6 November 2026. The estimate is reconstructed from the preceding four demo weeks, not an archived forecast or proof of forecasting accuracy. Does not change finances.",
+      "expects_response": true,
+      "response_timeout_secs": 30,
+      "execution_mode": "immediate",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  }
+]

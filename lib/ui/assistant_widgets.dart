@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:second_chance/core/companion.dart';
+import 'package:second_chance/ui/companion_action_card.dart';
 
 abstract final class AssistantColors {
   static const ink = Color(0xFF173D52);
@@ -196,9 +197,7 @@ class CompanionComposer extends StatelessWidget {
                   IconButton(
                     key: const ValueKey('start_voice'),
                     tooltip: companion.isVoiceActive
-                        ? companion.isMuted
-                              ? 'Unmute microphone'
-                              : 'Mute microphone'
+                        ? 'Voice controls'
                         : 'Talk with Cloudy',
                     onPressed:
                         companion.phase == CompanionPhase.connecting ||
@@ -285,26 +284,29 @@ class CompanionBubble extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
-            SelectableText(
-              user
-                  ? message.text
-                  : message.text.replaceAll(
-                      RegExp(
-                        r'\[(?:calm|warm|slow|curious|whispering|happy|sad|excited|serious|reassuring|thoughtful|friendly|empathetic|laughs|sighs|clears throat|short pause|long pause)\]\s*',
-                        caseSensitive: false,
+            if (message.actionResult != null)
+              CompanionActionCard(result: message.actionResult!)
+            else
+              SelectableText(
+                user
+                    ? message.text
+                    : message.text.replaceAll(
+                        RegExp(
+                          r'\[(?:calm|warm|slow|curious|whispering|happy|sad|excited|serious|reassuring|thoughtful|friendly|empathetic|laughs|sighs|clears throat|short pause|long pause)\]\s*',
+                          caseSensitive: false,
+                        ),
+                        '',
                       ),
-                      '',
-                    ),
-              style: TextStyle(
-                color: user
-                    ? AssistantColors.onComposer
-                    : dark
-                    ? const Color(0xFFF0F5F9)
-                    : const Color(0xFF203E51),
-                fontSize: 16,
-                height: 1.5,
+                style: TextStyle(
+                  color: user
+                      ? AssistantColors.onComposer
+                      : dark
+                      ? const Color(0xFFF0F5F9)
+                      : const Color(0xFF203E51),
+                  fontSize: 16,
+                  height: 1.5,
+                ),
               ),
-            ),
           ],
         ),
       ),

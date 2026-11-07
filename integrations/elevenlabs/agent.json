@@ -7,6 +7,13 @@
   "model": "gemini-3.8-flash",
   "temperature": 0.0,
   "max_tokens": 800,
+  "client_tools": [
+    "update_scenario",
+    "build_recovery_plan",
+    "set_emergency_goal",
+    "compare_history"
+  ],
+  "client_tools_file": "client-tools.json",
   "voice_id": "XB0fDUnXU5powFXDhCwa",
   "public_demo": true,
   "allowed_client_overrides": [

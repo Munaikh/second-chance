@@ -13,11 +13,15 @@ class CompanionMessage {
     required this.role,
     required this.text,
     this.isFallback = false,
+    this.actionName,
+    this.actionResult,
   });
 
   final String role;
   final String text;
   final bool isFallback;
+  final String? actionName;
+  final Map<String, Object?>? actionResult;
 }
 
 class CompanionController extends ChangeNotifier {
@@ -26,7 +30,10 @@ class CompanionController extends ChangeNotifier {
       'ELEVENLABS_AGENT_ID',
       defaultValue: 'agent_8301m6v7kzdgfza9119295h54skt',
     ),
-    eleven.ConversationClient Function(eleven.ConversationCallbacks)?
+    eleven.ConversationClient Function(
+      eleven.ConversationCallbacks,
+      Map<String, eleven.ClientTool>,
+    )?
     voiceClientFactory,
     Future<bool> Function()? requestMicrophonePermission,
   }) : _voiceClientFactory = voiceClientFactory ?? _createVoiceClient,
@@ -35,19 +42,42 @@ class CompanionController extends ChangeNotifier {
 
   static eleven.ConversationClient _createVoiceClient(
     eleven.ConversationCallbacks callbacks,
-  ) => eleven.ConversationClient(callbacks: callbacks);
+    Map<String, eleven.ClientTool> clientTools,
+  ) =>
+      eleven.ConversationClient(callbacks: callbacks, clientTools: clientTools);
   static Future<bool> _microphonePermission() async =>
       (await Permission.microphone.request()).isGranted;
-  final eleven.ConversationClient Function(eleven.ConversationCallbacks)
+  final eleven.ConversationClient Function(
+    eleven.ConversationCallbacks,
+    Map<String, eleven.ClientTool>,
+  )
   _voiceClientFactory;
   final Future<bool> Function() _requestMicrophonePermission;
   final String agentId;
+  Future<Map<String, Object?>> Function(String, Map<String, dynamic>)?
+  onToolCall;
+  static const actionNames = {
+    'update_scenario',
+    'build_recovery_plan',
+    'set_emergency_goal',
+    'compare_history',
+  };
+  final Map<String, Future<Map<String, Object?>>> _toolCalls = {};
+
+  Map<String, eleven.ClientTool> get voiceClientTools => {
+    for (final name in actionNames)
+      name: _CompanionActionTool(
+        (parameters) => _executeAction(name, parameters),
+      ),
+  };
   final List<CompanionMessage> _messages = [];
   Map<String, Object?> _context = {};
   eleven.ConversationClient? _voice;
   WebSocketChannel? _text;
   StreamSubscription<Object?>? _textSubscription;
   Timer? _replyTimer;
+  String? _pendingReplyMessage;
+  int _pendingActions = 0;
   Completer<void>? _textReady;
   String? _conversationId;
   bool _disposed = false;
@@ -91,6 +121,7 @@ class CompanionController extends ChangeNotifier {
     _context = Map.of(context);
     if (oldProfile != null && oldProfile != newProfile) {
       _messages.clear();
+      _toolCalls.clear();
       _usingFallback = false;
       unawaited(endSession());
       return;
@@ -130,6 +161,7 @@ class CompanionController extends ChangeNotifier {
       return;
     }
     final generation = _sessionGeneration;
+    _pendingReplyMessage = message;
     error = null;
     _messages.add(CompanionMessage(role: 'user', text: message));
     phase = CompanionPhase.thinking;
@@ -146,16 +178,7 @@ class CompanionController extends ChangeNotifier {
         if (_disposed || generation != _sessionGeneration) return;
         _sendSocket({'type': 'user_message', 'text': message});
       }
-      _replyTimer?.cancel();
-      _replyTimer = Timer(const Duration(seconds: 35), () {
-        if (phase != CompanionPhase.thinking ||
-            generation != _sessionGeneration) {
-          return;
-        }
-        error = 'Cloudy is taking too long. You can retry the connection.';
-        unawaited(endSession());
-        _replyWithFallback(message);
-      });
+      _armReplyDeadline(message, generation);
     } catch (failure) {
       if (_disposed || generation != _sessionGeneration) return;
       _recordTextFailure(failure);
@@ -164,6 +187,27 @@ class CompanionController extends ChangeNotifier {
       error = companionTextErrorMessage(failure);
       _replyWithFallback(message);
     }
+  }
+
+  void _armReplyDeadline(String message, int generation) {
+    _replyTimer?.cancel();
+    if (_disposed ||
+        generation != _sessionGeneration ||
+        _pendingReplyMessage != message ||
+        _pendingActions > 0) {
+      return;
+    }
+    _replyTimer = Timer(const Duration(seconds: 35), () {
+      if (_disposed ||
+          generation != _sessionGeneration ||
+          _pendingReplyMessage != message ||
+          _pendingActions > 0) {
+        return;
+      }
+      error = 'Cloudy is taking too long. You can retry the connection.';
+      unawaited(endSession());
+      _replyWithFallback(message);
+    });
   }
 
   Future<void> _connectText() async {
@@ -239,6 +283,8 @@ class CompanionController extends ChangeNotifier {
             'type': 'pong',
             'event_id': (data['ping_event'] as Map?)?['event_id'],
           });
+        case 'client_tool_call':
+          unawaited(_answerTextToolCall(data, generation));
         case 'agent_response':
           final text =
               (data['agent_response_event'] as Map?)?['agent_response'];
@@ -251,7 +297,8 @@ class CompanionController extends ChangeNotifier {
                   as Map?)?['corrected_agent_response'];
           if (text is String &&
               _messages.isNotEmpty &&
-              _messages.last.role == 'assistant') {
+              _messages.last.role == 'assistant' &&
+              _messages.last.actionName == null) {
             _messages[_messages.length - 1] = CompanionMessage(
               role: 'assistant',
               text: text,
@@ -264,6 +311,146 @@ class CompanionController extends ChangeNotifier {
     } catch (_) {
       error = 'Cloudy received an unreadable reply. Please reconnect.';
       _notify();
+    }
+  }
+
+  Future<void> _answerTextToolCall(
+    Map<String, Object?> event,
+    int generation,
+  ) async {
+    final reply = await handleClientToolCall(event);
+    if (!_disposed && generation == _sessionGeneration) _sendSocket(reply);
+  }
+
+  Future<Map<String, Object?>> handleClientToolCall(
+    Map<String, Object?> event,
+  ) async {
+    final call = event['client_tool_call'];
+    final id = call is Map ? call['tool_call_id'] : null;
+    final name = call is Map ? call['tool_name'] : null;
+    if (id is! String || id.trim().isEmpty) {
+      return _toolReply(
+        '',
+        _actionError(
+          name is String ? name : '',
+          'invalid_arguments',
+          'The action is missing a valid call identifier.',
+        ),
+      );
+    }
+    return _toolCalls.putIfAbsent(id, () async {
+      final parameters =
+          (call is Map ? call['parameters'] : null) ?? <String, Object?>{};
+      if (name is! String ||
+          parameters is! Map ||
+          parameters.keys.any((key) => key is! String)) {
+        return _toolReply(
+          id,
+          _actionError(
+            name is String ? name : '',
+            'invalid_arguments',
+            'The action needs a name and a JSON object of parameters.',
+          ),
+        );
+      }
+      return _toolReply(
+        id,
+        await _executeAction(name, Map<String, dynamic>.from(parameters)),
+      );
+    });
+  }
+
+  Map<String, Object?> _toolReply(String id, Map<String, Object?> result) => {
+    'type': 'client_tool_result',
+    'tool_call_id': id,
+    'result': jsonEncode(result),
+    'is_error': result['ok'] != true,
+  };
+
+  Map<String, Object?> _actionError(
+    String name,
+    String reason,
+    String message,
+  ) => {
+    'ok': false,
+    'action': name,
+    'reason': reason,
+    'message': message,
+    'summary': message,
+  };
+
+  Future<Map<String, Object?>> _executeAction(
+    String name,
+    Map<String, dynamic> parameters,
+  ) async {
+    if (!actionNames.contains(name)) {
+      return _actionError(
+        name,
+        'unsupported_action',
+        'That action is not supported.',
+      );
+    }
+    final handler = onToolCall;
+    if (handler == null) {
+      return _actionError(
+        name,
+        'unavailable',
+        'App actions are not available in this conversation yet. Please retry.',
+      );
+    }
+    final profileId = (_context['profile'] as Map?)?['id'];
+    try {
+      jsonEncode(parameters);
+    } catch (_) {
+      return _actionError(
+        name,
+        'invalid_arguments',
+        'Action parameters must contain valid JSON values.',
+      );
+    }
+    final generation = _sessionGeneration;
+    final pendingReply = _pendingReplyMessage;
+    _replyTimer?.cancel();
+    _pendingActions++;
+    phase = CompanionPhase.thinking;
+    _notify();
+    try {
+      final result = await handler(name, parameters);
+      jsonEncode(result);
+      if (result['ok'] == true &&
+          !_disposed &&
+          profileId == (_context['profile'] as Map?)?['id']) {
+        _messages.add(
+          CompanionMessage(
+            role: 'assistant',
+            text: result['summary'] as String? ?? 'Your action is ready.',
+            actionName: name,
+            actionResult: Map<String, Object?>.unmodifiable(result),
+          ),
+        );
+      }
+      return result;
+    } catch (failure) {
+      return _actionError(
+        name,
+        'action_failed',
+        'The action could not finish. Your existing plan is kept; please retry.',
+      );
+    } finally {
+      _pendingActions--;
+      if (!_disposed &&
+          generation == _sessionGeneration &&
+          profileId == (_context['profile'] as Map?)?['id']) {
+        if (pendingReply != null && _pendingReplyMessage == pendingReply) {
+          phase = CompanionPhase.thinking;
+          _armReplyDeadline(pendingReply, generation);
+        } else {
+          phase = isVoiceActive
+              ? CompanionPhase.listening
+              : CompanionPhase.idle;
+        }
+        _notify();
+      }
     }
   }
 
@@ -290,6 +477,7 @@ class CompanionController extends ChangeNotifier {
     _messages.add(CompanionMessage(role: role, text: text));
     if (role == 'user') phase = CompanionPhase.thinking;
     if (role == 'assistant') {
+      _pendingReplyMessage = null;
       _replyTimer?.cancel();
       _usingFallback = false;
       phase = isVoiceActive ? CompanionPhase.speaking : CompanionPhase.idle;
@@ -385,7 +573,14 @@ class CompanionController extends ChangeNotifier {
           phase = CompanionPhase.error;
           _notify();
         },
+        onUnhandledClientToolCall: (call) {
+          if (_disposed || generation != _sessionGeneration) return;
+          error = 'That app action is not supported. Ask Cloudy to change a scenario, make a recovery plan or set a savings goal.';
+          phase = CompanionPhase.listening;
+          _notify();
+        },
       ),
+      voiceClientTools,
     );
     _voice = client;
     try {
@@ -477,6 +672,7 @@ class CompanionController extends ChangeNotifier {
     _ending = true;
     _sessionGeneration++;
     _replyTimer?.cancel();
+    _pendingReplyMessage = null;
     final voice = _voice;
     _voice = null;
     phase = preparingVoice ? CompanionPhase.connecting : CompanionPhase.idle;
@@ -487,6 +683,8 @@ class CompanionController extends ChangeNotifier {
   }
 
   void _replyWithFallback(String input) {
+    _replyTimer?.cancel();
+    _pendingReplyMessage = null;
     _usingFallback = true;
     _messages.add(
       CompanionMessage(
@@ -624,3 +822,17 @@ String redactVoiceDiagnostic(String message) => message
       ),
       '<redacted-credential>',
     );
+
+class _CompanionActionTool extends eleven.ClientTool {
+  _CompanionActionTool(this.run);
+  final Future<Map<String, Object?>> Function(Map<String, dynamic>) run;
+  @override
+  Future<eleven.ClientToolResult?> execute(
+    Map<String, dynamic> parameters,
+  ) async {
+    final result = await run(parameters);
+    return result['ok'] == true
+        ? eleven.ClientToolResult.success(result)
+        : eleven.ClientToolResult.failure(jsonEncode(result));
+  }
+}
