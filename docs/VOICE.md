@@ -24,13 +24,15 @@ Action cards show the calculated outcome directly in chat. A completed recovery 
 
 The opt-in live app-state test completed all four tool calls: a £150 repair produced a £330 gap, n8n execution `10` produced the draft, a £500 goal retained £35, and the historical comparison returned its reconstructed/synthetic disclosure. Gemini 3.8 Flash remains the configured primary model; the retained default provider fallback also used Gemini 3.5 Flash during this conversation, confirmed in the post-call transcript. Evidence: `integrations/elevenlabs/app-actions-verification.json`. This check uses isolated synthetic preferences rather than the phone's saved progress.
 
+The user subsequently confirmed on the installed iPhone 15 Pro build that asking Cloudy to model a £150 repair and prepare a support request showed both the forecast result and editable draft in chat. Mobile data with Wi-Fi off and Tailscale on was used for this phone check.
+
 “Stop voice playback” ends the voice session immediately, which stops microphone capture and output. The official SDK does not expose an independent output-pause API. Starting voice again retains the visible conversation through a contextual update. Mute controls input; it does not pause Cloudy's output.
 
 When ElevenLabs is unreachable, a text reply can use deterministic guidance based on the supplied financial snapshot. These replies carry `isFallback: true` and the mode becomes **Calculated demo guidance**. A visible connection error explains how to reconnect. This mode is not live AI or ElevenLabs audio.
 
 ## Verification
 
-The iPhone 18 Pro Simulator (iOS 27.2) also connected through the Flutter WebRTC client on 7 November 2026. Microphone permission, listening/speaking state, mute, two contextual replies and Stop voice were exercised. Questions were typed into the live voice session while the microphone was muted. Actual spoken input is covered separately by the synthetic ASR test below; physical microphone quality and audible hardware playback are untested. Permission is obtained before the connection timeout starts, and temporary permission prompts do not end the session.
+The earlier iPhone 18 Pro Simulator (iOS 27.2) check connected through the Flutter WebRTC client on 7 November 2026. Microphone permission, listening/speaking state, mute, two contextual replies and Stop voice were exercised. Questions were typed into the live voice session while the microphone was muted. Actual spoken input was covered separately by the synthetic ASR test below; the later physical-phone conversation is recorded at the end of this document. Permission is obtained before the connection timeout starts, and temporary permission prompts do not end the session.
 
 The standalone service scripts use a deliberately small synthetic fixture, separate from the app’s two full financial histories. Their invoice on 16 November is not Noor’s app fixture, whose next delivery payment after the shortfall is 14 November. The simulator check used the app’s actual calculated snapshot and correctly explained the 14 November timing.
 

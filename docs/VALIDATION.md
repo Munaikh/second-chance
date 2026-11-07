@@ -12,6 +12,8 @@ The dedicated listening layout keeps a large Cloudy above a lower control/transc
 
 Four client actions now execute within the conversation, with validation and replacement confirmation. Both SDK voice handlers and text protocol handling are covered, including call-ID deduplication, long-running recovery timeouts and editable inline drafts. The live test used the real AppState handler for all four actions, with isolated synthetic persistence; it did not alter the user's phone data.
 
+After installation on the physical iPhone 15 Pro, the user confirmed that asking Cloudy to model a £150 repair and prepare a support request produced both the forecast result and editable draft in the conversation. This acceptance used mobile data with Wi-Fi off and Tailscale on.
+
 Forecast lines now use bounded cubic curves through daily closing values, with paired exact balances and differences at the selected date. Expected vs actual reconstructs 10 October–6 November using only the preceding four synthetic demo weeks, then compares it with held-out synthetic recorded balances. It does not represent an archived forecast, future actuals or prediction-accuracy evidence.
 
 The physical iPhone reproduced a DNS lookup failure for `api.elevenlabs.io`, affecting both text and voice. On mobile data with Wi-Fi off and Tailscale on, the user confirmed that Cloudy heard and answered two spoken turns. The app reports DNS failures accurately, bounds startup/cleanup and supports copying sanitized diagnostics. Speech direction tags are hidden from the displayed transcript. The venue Wi-Fi DNS configuration remains unchanged; mobile data is the verified demo route.
@@ -52,6 +54,6 @@ Appllama research inspected the complete Buddy Overview flow (`936422955`: `oth_
 - Live ElevenLabs checks cover two text turns and two synthetic spoken turns through ASR → contextual reply → audio. Evidence: `integrations/elevenlabs/`.
 - The actual local n8n webhook returned a personalised plan and sources. `integration-evidence.json` verifies transport and personalisation independently from the Dart fixtures.
 
-These earlier service checks alone do not establish physical-device microphone quality, audible playback routing, accessibility traversal or wellbeing outcomes. The later user-confirmed two-turn phone conversation is recorded above; phone execution of the new client actions remains awaiting user verification. Customer data is synthetic; forecasts are calculated; guidance is curated. The app does not connect a bank, submit requests, grant support or move money.
+These earlier service checks alone do not establish physical-device microphone quality, audible playback routing, accessibility traversal or wellbeing outcomes. The later user-confirmed phone conversation and forecast/recovery actions are recorded above. Customer data is synthetic; forecasts are calculated; guidance is curated. The app does not connect a bank, submit requests, grant support or move money.
 
 Android and older iOS implementations are not physical-device acceptance evidence. Cloud hosting, production authentication and broader device acceptance remain follow-on work. Live service availability and quota can change after verification.

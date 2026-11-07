@@ -86,4 +86,4 @@ node integrations/elevenlabs/verify.mjs
 flutter test test/live/companion_actions_live_test.dart --dart-define=RUN_LIVE_AGENT_TESTS=true --dart-define=API_BASE_URL=http://127.0.0.1:8787
 ```
 
-See [voice setup](docs/VOICE.md), [n8n setup](docs/INTEGRATIONS.md) and [validation limits](docs/VALIDATION.md). Text chat needs no microphone permission. Production authentication, cloud hosting and physical-device acceptance remain follow-on work.
+See [voice setup](docs/VOICE.md), [n8n setup](docs/INTEGRATIONS.md) and [validation limits](docs/VALIDATION.md). Text chat needs no microphone permission. Phone voice and forecast/recovery actions are user-confirmed on mobile data with Tailscale. Production authentication, cloud hosting and broader device acceptance remain follow-on work.

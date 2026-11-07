@@ -1,12 +1,12 @@
 # Three-minute demo
 
-Start local services, confirm `/health` and launch the app. Tap the avatar → Reset all demo progress. Keep Noor selected. Use fictional details only. Check audio and ElevenLabs quota before presenting; text remains an equivalent route.
+Start local services, confirm `/health` and launch the app. On the verified phone setup, keep Wi-Fi off, mobile data and Tailscale on, and the Mac awake. Tap the avatar → Reset all demo progress. Keep Noor selected. Use fictional details only. Check audio and ElevenLabs quota before presenting; text remains an equivalent route.
 
 1. **Prepare · 30 seconds.** “Meet Noor. Her income varies, but her bills still have dates.” Cloudy peeks over the financial sheet. Show £485 available and the expected £180 gap on 12 November. Drag the sheet up or use its expand control, then open **See forecast**. Rent and energy arrive before earnings on 14 November. These are synthetic records and estimated daily closing balances.
-2. **Listen · 30 seconds.** Tap Cloudy or the microphone on Home, or type into the persistent input. Ask “Why might I run short?” then “What should I do first?” Cloudy moves into the conversation header and the sheet makes space for chat. Show mute and Stop voice. Text needs no microphone. Use the back control to return to the overview.
-3. **Compare · 30 seconds.** Set the weekly spending reduction to £25. The first gap falls from £180 to £155. Small changes help without erasing the timing problem. Reset for the baseline recovery request.
-4. **Support · 45 seconds.** Open **Make a recovery plan**, choose **Less income**, optionally add a fictional note and create the plan. Review the editable request, change a bracketed detail and copy it. Show evidence, source links and the real n8n run ID. Nothing is sent.
-5. **Grow · 35 seconds.** On Home, expand the sheet and open the emergency buffer row. Create a £500 buffer and record £5 already set aside. Show the progress milestone and credit-report action. Restart and reopen the buffer to demonstrate persistence.
+2. **Listen · 30 seconds.** Tap Cloudy or the microphone on Home. Ask “Why might I run short?” then “What should I do first?” Show the large listening mascot, transcript, Mute and End controls. Tap Chat to show the same conversation without ending the session. Text needs no microphone.
+3. **Compare · 30 seconds.** Ask Cloudy “Model reducing weekly spending by £25.” The result appears in chat and the first gap falls from £180 to £155. Ask “Reset my forecast assumptions” for the baseline recovery request. Small changes help without erasing the timing problem.
+4. **Support · 45 seconds.** Ask Cloudy “Prepare a support request for my lower income.” Review the returned recovery plan and editable request in chat, change a bracketed detail and copy it. Show evidence, source links and the real n8n run ID. Nothing is sent.
+5. **Grow · 35 seconds.** Ask Cloudy “Create a £500 emergency buffer goal.” Return Home and open **Savings goal** from the sheet to record £5 already set aside. Show the progress milestone and credit-report action. Restart and reopen the goal to demonstrate persistence.
 6. **Contrast · 10 seconds.** Switch to Alex. Balance, forecast, circumstances and guidance change. Noor’s progress stays with Noor.
 
 ## One-minute pitch
@@ -23,7 +23,7 @@ For NatWest, this could offer an earlier, more humane route into existing suppor
 
 - n8n: notes and existing plans stay saved. Restart services and retry; the app does not invent a successful run.
 - ElevenLabs: calculated fallback guidance is labelled. Reconnect or use text; fallback is not represented as live AI.
-- Microphone: continue through text or enable permission in Settings. Stop voice ends capture and playback while retaining the transcript.
+- Microphone: continue through text or enable permission in Settings. End stops capture and playback while retaining the transcript.
 
 ## Judge mapping
 
