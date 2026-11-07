@@ -16,7 +16,7 @@ Forecast lines now use bounded cubic curves through daily closing values, with p
 
 The physical iPhone reproduced a DNS lookup failure for `api.elevenlabs.io`, affecting both text and voice. On mobile data with Wi-Fi off and Tailscale on, the user confirmed that Cloudy heard and answered two spoken turns. The app reports DNS failures accurately, bounds startup/cleanup and supports copying sanitized diagnostics. Speech direction tags are hidden from the displayed transcript. The venue Wi-Fi DNS configuration remains unchanged; mobile data is the verified demo route.
 
-## Mascot-first redesign
+## Earlier mascot-first redesign checks
 
 The original prototype was committed and pushed as `8f92fc0` before the redesign. The app is now Raise, with Cloudy, an original animated cloud, above a draggable financial sheet with a pinned expand/collapse control, a permanent voice/text composer and inline conversations. Forecast, recovery and progress screens remain reachable through the sheet. Existing device progress is preserved; internal package and storage identifiers are retained.
 
@@ -24,9 +24,9 @@ The supplied assistant screenshots were the primary layout reference: spacious s
 
 Five additional home regressions cover initial mascot/composer access, sheet expansion and scrolling, calculated chat and returning to Home, keyboard/2× text layout, and profile isolation. Earlier forecast, goal, draft and persistence journeys were adapted to menu navigation. Live simulator checks verified sheet expansion, internal scrolling, collapse and a contextual ElevenLabs text reply.
 
-The final Raise build has **42 passing Flutter tests**, including parsing the real Cloudy asset, switching all three playback ranges and freezing under reduced motion. Source analysis is clean. The final iOS Simulator build and launch succeeded, and the reference-matching cloud, glasses and face were visually inspected above the sheet.
+At this stage, the Raise build had **42 passing Flutter tests**, including parsing the real Cloudy asset, switching all three playback ranges and freezing under reduced motion. Source analysis was clean. The iOS Simulator build and launch succeeded, and the reference-matching cloud, glasses and face were visually inspected above the sheet. Current checks are recorded above.
 
-Voice testing encountered a native iOS Simulator abort: Apple `AudioUnitInitialize` timed out while LiveKit/WebRTC initialized audio capture or playback. The same native boundary appears in crashes before the visual redesign. Live ElevenLabs text works, including the verified Cloudy/Raise identity. Current simulator audio stability is unresolved; no physical-device audio acceptance is claimed.
+Voice testing encountered a native iOS Simulator abort: Apple `AudioUnitInitialize` timed out while LiveKit/WebRTC initialized audio capture or playback. The same native boundary appears in crashes before the visual redesign. Live ElevenLabs text worked, including the verified Cloudy/Raise identity. Simulator audio stability remained unresolved. The later physical-device voice check is recorded above.
 
 ## Original prototype verification
 
@@ -52,6 +52,6 @@ Appllama research inspected the complete Buddy Overview flow (`936422955`: `oth_
 - Live ElevenLabs checks cover two text turns and two synthetic spoken turns through ASR → contextual reply → audio. Evidence: `integrations/elevenlabs/`.
 - The actual local n8n webhook returned a personalised plan and sources. `integration-evidence.json` verifies transport and personalisation independently from the Dart fixtures.
 
-These service checks do not establish physical-device microphone quality, audible playback routing, accessibility traversal or wellbeing outcomes. Customer data is synthetic; forecasts are calculated; guidance is curated. The app does not connect a bank, submit requests, grant support or move money.
+These earlier service checks alone do not establish physical-device microphone quality, audible playback routing, accessibility traversal or wellbeing outcomes. The later user-confirmed two-turn phone conversation is recorded above; phone execution of the new client actions remains awaiting user verification. Customer data is synthetic; forecasts are calculated; guidance is curated. The app does not connect a bank, submit requests, grant support or move money.
 
-Android and older iOS implementations are not physical-device acceptance evidence. Cloud hosting, production authentication and device acceptance remain follow-on work. Live service availability and quota can change after verification.
+Android and older iOS implementations are not physical-device acceptance evidence. Cloud hosting, production authentication and broader device acceptance remain follow-on work. Live service availability and quota can change after verification.
