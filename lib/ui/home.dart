@@ -1,11 +1,812 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:smooth_sheets/smooth_sheets.dart';
+import 'package:second_chance/core/companion.dart';
 import 'package:second_chance/core/finance.dart';
 import 'package:second_chance/main.dart';
-import 'package:second_chance/ui/companion_page.dart';
+import 'package:second_chance/ui/assistant_widgets.dart';
 import 'package:second_chance/ui/design.dart';
+import 'package:second_chance/ui/cloudy.dart';
 import 'package:second_chance/ui/forecast.dart';
 import 'package:second_chance/ui/profile.dart';
+
+class PreparePage extends StatefulWidget {
+  const PreparePage({
+    super.key,
+    required this.onSupport,
+    required this.onGrow,
+    this.startInConversation = false,
+    this.initialQuestion,
+  });
+  final VoidCallback onSupport, onGrow;
+  final bool startInConversation;
+  final String? initialQuestion;
+  @override
+  State<PreparePage> createState() => _PreparePageState();
+}
+
+class _PreparePageState extends State<PreparePage>
+    with WidgetsBindingObserver, RouteAware {
+  final _sheet = SheetController();
+  final _input = TextEditingController();
+  final _focus = FocusNode();
+  final _chatScroll = ScrollController();
+  CompanionController? _companion;
+  PageRoute<dynamic>? _route;
+  late bool _chatOpen = widget.startInConversation;
+  int _messageCount = 0;
+  String? _profileId;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _focus.addListener(_onFocus);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = AppScope.of(context);
+    if (_companion == null) {
+      _companion = state.companion;
+      _companion!.addListener(_onCompanion);
+      if (widget.initialQuestion != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _sendPrompt(widget.initialQuestion!);
+        });
+      }
+    }
+    if (_profileId != null && _profileId != state.profile.id) {
+      _chatOpen = false;
+      _input.clear();
+      _focus.unfocus();
+    }
+    _profileId = state.profile.id;
+    final route = ModalRoute.of(context);
+    if (route is PageRoute && route != _route) {
+      appRouteObserver.unsubscribe(this);
+      _route = route;
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  void _onFocus() {
+    if (_focus.hasFocus && !_chatOpen) setState(() => _chatOpen = true);
+  }
+
+  void _onCompanion() {
+    if (!mounted) return;
+    final count = _companion!.messages.length;
+    if (count != _messageCount) {
+      _messageCount = count;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _chatScroll.hasClients) {
+          if (MediaQuery.disableAnimationsOf(context)) {
+            _chatScroll.jumpTo(_chatScroll.position.maxScrollExtent);
+          } else {
+            _chatScroll.animateTo(
+              _chatScroll.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 220),
+              curve: const Cubic(.23, 1, .32, 1),
+            );
+          }
+        }
+      });
+    }
+    setState(() {});
+  }
+
+  @override
+  void didPushNext() {
+    _focus.unfocus();
+    unawaited(_companion?.endSession());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(_companion?.endSession());
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    appRouteObserver.unsubscribe(this);
+    _companion?.removeListener(_onCompanion);
+    unawaited(_companion?.endSession());
+    _focus.removeListener(_onFocus);
+    _focus.dispose();
+    _input.dispose();
+    _sheet.dispose();
+    _chatScroll.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendPrompt(String prompt) async {
+    setState(() => _chatOpen = true);
+    _focus.unfocus();
+    AppScope.of(context).updateCompanionContext();
+    await _companion!.sendText(prompt);
+  }
+
+  Future<void> _send() async {
+    final text = _input.text.trim();
+    if (text.isEmpty ||
+        _companion!.phase == CompanionPhase.connecting ||
+        _companion!.phase == CompanionPhase.thinking) {
+      return;
+    }
+    _input.clear();
+    await _sendPrompt(text);
+  }
+
+  Future<void> _voice() async {
+    if (_companion!.phase == CompanionPhase.connecting) return;
+    setState(() => _chatOpen = true);
+    _focus.unfocus();
+    AppScope.of(context).updateCompanionContext();
+    if (_companion!.isVoiceActive) {
+      await _companion!.toggleMute();
+    } else {
+      await _companion!.startVoice();
+    }
+  }
+
+  Future<void> _closeChat() async {
+    _focus.unfocus();
+    await _companion!.endSession();
+    if (!mounted) return;
+    if (widget.startInConversation) {
+      Navigator.of(context).maybePop();
+    } else {
+      setState(() => _chatOpen = false);
+    }
+  }
+
+  Future<void> _menu() async {
+    _focus.unfocus();
+    final choice = await showMenu<String>(
+      context: context,
+      position: const RelativeRect.fromLTRB(18, 112, 200, 0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      items: const [
+        PopupMenuItem(
+          value: 'forecast',
+          child: ListTile(
+            leading: Icon(CupertinoIcons.calendar),
+            title: Text('Your forecast'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'support',
+          child: ListTile(
+            leading: Icon(CupertinoIcons.heart),
+            title: Text('Support plan'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'grow',
+          child: ListTile(
+            leading: Icon(CupertinoIcons.leaf_arrow_circlepath),
+            title: Text('Goals & progress'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+      ],
+    );
+    if (!mounted || choice == null) return;
+    if (choice == 'forecast') {
+      openPage(context, const ForecastPage());
+    } else if (choice == 'support') {
+      widget.onSupport();
+    } else {
+      widget.onGrow();
+    }
+  }
+
+  void _toggleSheet(double rest, double expanded) {
+    if (!_sheet.hasClient) return;
+    final target = (_sheet.value ?? rest) > rest + 40 ? rest : expanded;
+    _sheet.animateTo(
+      SheetOffset.absolute(target),
+      duration: MediaQuery.disableAnimationsOf(context)
+          // Smooth Sheets requires a positive duration and has no jump API.
+          ? const Duration(microseconds: 1)
+          : const Duration(milliseconds: 280),
+      curve: const Cubic(.23, 1, .32, 1),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final companion = _companion!;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final reduced = MediaQuery.disableAnimationsOf(context);
+    final top = MediaQuery.viewPaddingOf(context).top;
+    final foreground = dark ? const Color(0xFFF0F6FC) : AssistantColors.ink;
+    final duration = reduced
+        ? Duration.zero
+        : const Duration(milliseconds: 280);
+    final talking = companion.phase == CompanionPhase.speaking;
+    return PopScope(
+      canPop: !_chatOpen || widget.startInConversation,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _closeChat();
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        body: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: AssistantColors.sky(dark),
+              stops: const [0, .50, 1],
+            ),
+          ),
+          child: Column(
+            children: [
+              if (state.persistenceError != null)
+                SafeArea(
+                  bottom: false,
+                  child: MaterialBanner(
+                    content: Text(state.persistenceError!),
+                    actions: [
+                      TextButton(
+                        onPressed: state.persist,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, box) {
+                    final compact = box.maxHeight < 570;
+                    final maxExtent = math.max(160.0, box.maxHeight - top - 74);
+                    final rest = math.min(
+                      maxExtent,
+                      math.max(210.0, box.maxHeight * .40),
+                    );
+                    final peek = math.min(rest, 150.0);
+                    final largeSize = compact ? 230.0 : 300.0;
+                    final mascotTop = compact
+                        ? top + 76
+                        : math.max(top + 158, box.maxHeight * .35);
+                    return ClipRect(
+                      child: Stack(
+                        clipBehavior: Clip.hardEdge,
+                        children: [
+                          if (!_chatOpen && !compact)
+                            Positioned(
+                              top: top + 96,
+                              left: 26,
+                              right: 24,
+                              child: ExcludeSemantics(
+                                excluding: _chatOpen,
+                                child: Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      const TextSpan(text: 'Your money,\n'),
+                                      TextSpan(
+                                        text: 'a little clearer.',
+                                        style: TextStyle(
+                                          fontFamily: 'Georgia',
+                                          fontStyle: FontStyle.italic,
+                                          color: foreground,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  style: TextStyle(
+                                    color: foreground,
+                                    fontSize:
+                                        MediaQuery.textScalerOf(context)
+                                                .scale(1) >
+                                            1.5
+                                        ? 28
+                                        : 36,
+                                    height: 1.15,
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: -1.1,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          AnimatedPositioned(
+                            duration: duration,
+                            curve: const Cubic(.23, 1, .32, 1),
+                            top: _chatOpen ? top + 2 : mascotTop,
+                            left:
+                                (box.maxWidth - (_chatOpen ? 78 : largeSize)) /
+                                2,
+                            width: _chatOpen ? 78 : largeSize,
+                            height: _chatOpen ? 78 : largeSize,
+                            child: Cloudy(
+                              key: const ValueKey('home_mascot'),
+                              size: _chatOpen ? 78 : largeSize,
+                              phase: companion.phase,
+                              onTap: _voice,
+                            ),
+                          ),
+                          if (_chatOpen)
+                            Positioned.fill(
+                              top: top + 92,
+                              child: _ConversationBody(
+                                companion: companion,
+                                scroll: _chatScroll,
+                                onRetry: () => companion.endSession(),
+                                onSupport: widget.onSupport,
+                              ),
+                            ),
+                          IgnorePointer(
+                            ignoring: _chatOpen,
+                            child: ExcludeSemantics(
+                              excluding: _chatOpen,
+                              child: AnimatedSlide(
+                                duration: duration,
+                                curve: const Cubic(.23, 1, .32, 1),
+                                offset: _chatOpen
+                                    ? const Offset(0, 1)
+                                    : Offset.zero,
+                                child: SheetViewport(
+                                  padding: EdgeInsets.only(
+                                    top: top + 74,
+                                    bottom: 4,
+                                  ),
+                                  child: Sheet(
+                                    key: ValueKey(
+                                      'financial_sheet_${state.profile.id}',
+                                    ),
+                                    controller: _sheet,
+                                    initialOffset: SheetOffset.absolute(rest),
+                                    snapGrid: SheetSnapGrid(
+                                      snaps: [
+                                        SheetOffset.absolute(peek),
+                                        SheetOffset.absolute(rest),
+                                        SheetOffset.absolute(maxExtent),
+                                      ],
+                                    ),
+                                    scrollConfiguration:
+                                        const SheetScrollConfiguration(),
+                                    decoration: MaterialSheetDecoration(
+                                      size: SheetSize.stretch,
+                                      color: AppColors.surface(context),
+                                      borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(30),
+                                      ),
+                                      clipBehavior: Clip.antiAlias,
+                                      elevation: 0,
+                                    ),
+                                    child: _FinancialSheet(
+                                      onSupport: widget.onSupport,
+                                      onGrow: widget.onGrow,
+                                      onToggle: () =>
+                                          _toggleSheet(rest, maxExtent),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: top + 10,
+                            left: 18,
+                            right: 18,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                AssistantIconButton(
+                                  key: const ValueKey('home_menu'),
+                                  icon: _chatOpen
+                                      ? CupertinoIcons.chevron_left
+                                      : CupertinoIcons.line_horizontal_3,
+                                  label: _chatOpen
+                                      ? 'Back to your overview'
+                                      : 'Open navigation',
+                                  onPressed: _chatOpen ? _closeChat : _menu,
+                                ),
+                                if (!_chatOpen)
+                                  Text(
+                                    'raise',
+                                    style: TextStyle(
+                                      color: foreground,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: -.8,
+                                    ),
+                                  ),
+                                AssistantIconButton(
+                                  key: const ValueKey('open_profiles'),
+                                  icon: CupertinoIcons.person_crop_circle,
+                                  label: 'Demo profiles',
+                                  onPressed: () =>
+                                      openPage(context, const ProfilePage()),
+                                  child: Text(
+                                    state.profile.initials,
+                                    style: TextStyle(
+                                      color: foreground,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_chatOpen)
+                            Positioned(
+                              top: top + 77,
+                              left: 85,
+                              right: 85,
+                              child: Text(
+                                talking
+                                    ? 'Cloudy is speaking'
+                                    : companion.phase ==
+                                          CompanionPhase.listening
+                                    ? 'Cloudy is listening'
+                                    : 'Cloudy',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: foreground,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              CompanionComposer(
+                controller: _input,
+                focusNode: _focus,
+                companion: companion,
+                onSend: _send,
+                onVoice: _voice,
+                onStop: companion.stopSpeaking,
+                onPrompt: _sendPrompt,
+                showSuggestions: !_chatOpen,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FinancialSheet extends StatelessWidget {
+  const _FinancialSheet({
+    required this.onSupport,
+    required this.onGrow,
+    required this.onToggle,
+  });
+  final VoidCallback onSupport, onGrow, onToggle;
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final forecast = state.forecast;
+    final pressure = forecast.firstShortfall;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 9, 12, 0),
+          child: Column(
+            children: [
+              Center(
+                child: Container(
+                  width: 32,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.muted(context).withValues(alpha: .28),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 3),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'FOR YOU, ${state.profile.name.toUpperCase()}',
+                      style: Theme.of(context).textTheme.labelMedium
+                          ?.copyWith(fontSize: 10, letterSpacing: 1),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      '7 Nov · demo',
+                      textAlign: TextAlign.right,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  IconButton(
+                    key: const ValueKey('expand_overview'),
+                    tooltip: 'Expand or collapse your overview',
+                    onPressed: () {
+                      final scroll = PrimaryScrollController.maybeOf(context);
+                      if (scroll != null &&
+                          scroll.hasClients &&
+                          scroll.offset > 0) {
+                        scroll.jumpTo(0);
+                      }
+                      onToggle();
+                    },
+                    icon: const Icon(
+                      CupertinoIcons.chevron_up_chevron_down,
+                      size: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            key: PageStorageKey('prepare_${state.profile.id}'),
+            padding: const EdgeInsets.fromLTRB(24, 3, 24, 30),
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Available today',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          formatPence(state.profile.openingBalancePence),
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          pressure == null
+                              ? 'Your next 30 days'
+                              : 'Expected ${formatDate(pressure.date)}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          pressure == null
+                              ? 'Looking steady'
+                              : '${formatPence(state.shortfallPence)} gap',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Divider(height: 1, color: AppColors.line(context)),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.canvas(context),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pressure == null
+                          ? 'A good moment to build a little more breathing room.'
+                          : 'There may be a tight week ahead. Let’s make a plan.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 5,
+                      runSpacing: 4,
+                      children: [
+                        TextButton(
+                          key: const ValueKey('open_forecast'),
+                          onPressed: () =>
+                              openPage(context, const ForecastPage()),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AssistantColors.accent,
+                            backgroundColor: AppColors.surface(context),
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                          ),
+                          child: const Text(
+                            'See forecast',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: pressure == null ? onGrow : onSupport,
+                          child: Text(
+                            pressure == null ? 'Build a buffer' : 'Make a plan',
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 25),
+              SectionHeading(
+                'Your next 30 days',
+                action: 'Details',
+                onAction: () => openPage(context, const ForecastPage()),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _MoneyMetric(
+                      'Expected income',
+                      forecast.totalIncomePence,
+                    ),
+                  ),
+                  Expanded(
+                    child: _MoneyMetric(
+                      'Planned spending',
+                      forecast.totalOutgoingsPence,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 19),
+              ForecastChart(forecast: forecast, compact: true),
+              const SizedBox(height: 20),
+              ActionRow(
+                icon: CupertinoIcons.heart,
+                title: state.recovery == null
+                    ? 'Make a support plan'
+                    : 'Your saved support plan',
+                subtitle: 'Practical help, in your own words',
+                onTap: onSupport,
+              ),
+              ActionRow(
+                icon: CupertinoIcons.leaf_arrow_circlepath,
+                title: state.goal?.title ?? 'Start your emergency buffer',
+                subtitle: state.goal == null
+                    ? 'Small steps, at your pace'
+                    : '${formatPence(state.goal!.savedPence)} of ${formatPence(state.goal!.targetPence)} recorded',
+                onTap: onGrow,
+              ),
+              const SizedBox(height: 22),
+              SectionHeading(
+                'Coming up',
+                action: 'See all',
+                onAction: () => openPage(context, const LedgerPage()),
+              ),
+              ...forecast.entries.take(4).map((e) => LedgerRow(e)),
+              const SizedBox(height: 20),
+              Text(
+                'Synthetic UK demo · 7 Nov 2026\nFuture amounts and dates are estimates.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MoneyMetric extends StatelessWidget {
+  const _MoneyMetric(this.label, this.amount);
+  final String label;
+  final int amount;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: Theme.of(context).textTheme.bodySmall),
+      const SizedBox(height: 5),
+      Text(formatPence(amount), style: Theme.of(context).textTheme.titleMedium),
+    ],
+  );
+}
+
+class _ConversationBody extends StatelessWidget {
+  const _ConversationBody({
+    required this.companion,
+    required this.scroll,
+    required this.onRetry,
+    required this.onSupport,
+  });
+  final CompanionController companion;
+  final ScrollController scroll;
+  final VoidCallback onRetry, onSupport;
+  @override
+  Widget build(BuildContext context) {
+    final busy =
+        companion.phase == CompanionPhase.connecting ||
+        companion.phase == CompanionPhase.thinking;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return ListView(
+      key: const ValueKey('conversation_messages'),
+      controller: scroll,
+      padding: const EdgeInsets.fromLTRB(22, 22, 22, 16),
+      children: [
+        if (companion.messages.isEmpty && !busy)
+          Padding(
+            padding: const EdgeInsets.only(top: 24),
+            child: Text(
+              'I’m here. What’s on your mind?',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w400,
+                height: 1.4,
+                color: dark ? const Color(0xFFF0F6FC) : AssistantColors.ink,
+              ),
+            ),
+          ),
+        ...companion.messages.map((m) => CompanionBubble(m)),
+        if (busy)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 13),
+              decoration: BoxDecoration(
+                color: AppColors.surface(context),
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Text(
+                companion.phase == CompanionPhase.connecting
+                    ? 'Connecting…'
+                    : 'Cloudy is thinking…',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ),
+        if (companion.error != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Surface(
+              padding: const EdgeInsets.all(17),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(companion.error!),
+                  TextButton(
+                    onPressed: onRetry,
+                    child: const Text('Reconnect'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        if (companion.messages.isNotEmpty)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: onSupport,
+              child: const Text('Make a support plan'),
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 class PageHeader extends StatelessWidget {
   const PageHeader({super.key, required this.label});
@@ -65,265 +866,6 @@ class PageHeader extends StatelessWidget {
       ],
     );
   }
-}
-
-class PreparePage extends StatelessWidget {
-  const PreparePage({super.key, required this.onSupport, required this.onGrow});
-  final VoidCallback onSupport;
-  final VoidCallback onGrow;
-  @override
-  Widget build(BuildContext context) {
-    final state = AppScope.of(context);
-    final profile = state.profile;
-    final forecast = state.forecast;
-    final pressure = forecast.firstShortfall;
-    return SafeArea(
-      bottom: false,
-      child: ListView(
-        key: PageStorageKey('prepare_${profile.id}'),
-        padding: const EdgeInsets.fromLTRB(24, 10, 24, 140),
-        children: [
-          const PageHeader(label: 'Prepare'),
-          const SizedBox(height: 22),
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            spacing: 12,
-            runSpacing: 8,
-            children: [
-              Text(
-                'HELLO, ${profile.name.split(' ').first.toUpperCase()}',
-                style: Theme.of(context).textTheme.labelMedium,
-              ),
-              const StatusPill('Demo · 7 Nov 2026'),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'A little clarity.\nA stronger tomorrow.',
-            style: Theme.of(context).textTheme.headlineLarge,
-          ),
-          const SizedBox(height: 28),
-          Surface(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Your everyday balance',
-                        style: TextStyle(color: AppColors.muted(context)),
-                      ),
-                    ),
-                    Icon(
-                      CupertinoIcons.creditcard,
-                      color: AppColors.muted(context),
-                      size: 21,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  formatPence(profile.openingBalancePence, decimals: true),
-                  style: Theme.of(context).textTheme.displaySmall,
-                ),
-                const SizedBox(height: 18),
-                Divider(color: AppColors.line(context), height: 1),
-                const SizedBox(height: 17),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _MoneyMetric(
-                        'Expected income',
-                        profile.monthlyIncomePence,
-                      ),
-                    ),
-                    Expanded(
-                      child: _MoneyMetric(
-                        'Planned essentials',
-                        profile.monthlyEssentialsPence,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  'Next 30 days · synthetic UK profile',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          Surface(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'A look ahead',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                    const StatusPill('30 days', icon: CupertinoIcons.calendar),
-                  ],
-                ),
-                const SizedBox(height: 19),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            pressure == null
-                                ? 'Room to breathe'
-                                : '${formatPence(-pressure.balancePence)} short',
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            pressure == null
-                                ? 'Your forecast stays above £0.'
-                                : 'Expected on ${formatDate(pressure.date)}',
-                            style: TextStyle(color: AppColors.muted(context)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Pip(size: 76),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                ForecastChart(forecast: forecast, compact: true),
-                const SizedBox(height: 14),
-                if (pressure != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          CupertinoIcons.clock,
-                          size: 18,
-                          color: AppColors.accent(context),
-                        ),
-                        const SizedBox(width: 8),
-                        const Expanded(
-                          child: Text(
-                            'Bills arrive before your next income. There’s time to make a plan.',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                PrimaryButton(
-                  key: const ValueKey('open_forecast'),
-                  label: 'Explore your future',
-                  icon: CupertinoIcons.arrow_up_right,
-                  onPressed: () => openPage(context, const ForecastPage()),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 22),
-          Surface(
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    const Pip(size: 63),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'You don’t have to figure it out alone.',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            'Talk it through with Pip.',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    key: const ValueKey('open_companion'),
-                    onPressed: () => openPage(context, const CompanionPage()),
-                    icon: const Icon(
-                      CupertinoIcons.bubble_left_bubble_right,
-                      size: 20,
-                    ),
-                    label: const Text('Let’s talk'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 25),
-          const SectionHeading('One step at a time'),
-          const SizedBox(height: 8),
-          ActionRow(
-            icon: CupertinoIcons.heart,
-            title: 'Make a support plan',
-            subtitle: 'Practical help for a difficult month',
-            onTap: onSupport,
-          ),
-          ActionRow(
-            icon: CupertinoIcons.leaf_arrow_circlepath,
-            title: state.goal == null
-                ? 'Start your emergency buffer'
-                : state.goal!.title,
-            subtitle: state.goal == null
-                ? 'Small amounts. More peace of mind.'
-                : '${formatPence(state.goal!.savedPence)} of ${formatPence(state.goal!.targetPence)} recorded',
-            onTap: onGrow,
-          ),
-          const SizedBox(height: 20),
-          SectionHeading(
-            'Money coming and going',
-            action: 'See all',
-            onAction: () => openPage(context, const LedgerPage()),
-          ),
-          const SizedBox(height: 5),
-          Surface(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-            child: Column(
-              children: profile.upcoming
-                  .take(3)
-                  .map((e) => LedgerRow(e))
-                  .toList(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MoneyMetric extends StatelessWidget {
-  const _MoneyMetric(this.label, this.amount);
-  final String label;
-  final int amount;
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: Theme.of(context).textTheme.bodySmall),
-      const SizedBox(height: 4),
-      Text(formatPence(amount), style: Theme.of(context).textTheme.titleMedium),
-    ],
-  );
 }
 
 class LedgerRow extends StatelessWidget {

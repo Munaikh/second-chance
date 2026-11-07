@@ -1,6 +1,6 @@
 {
   "agent_id": "agent_8301m6v7kzdgfza9119295h54skt",
-  "name": "Second Chance · Pip · UK demo",
+  "name": "Cloudy",
   "purpose": "Dedicated public synthetic-data NatWest hackathon prototype; no banking actions",
   "language": "en",
   "first_message": "",
@@ -9,7 +9,9 @@
   "max_tokens": 800,
   "voice_id": "XB0fDUnXU5powFXDhCwa",
   "public_demo": true,
-  "allowed_client_overrides": ["conversation.text_only"],
+  "allowed_client_overrides": [
+    "conversation.text_only"
+  ],
   "record_voice": false,
   "retention_days": 1,
   "delete_audio": true,

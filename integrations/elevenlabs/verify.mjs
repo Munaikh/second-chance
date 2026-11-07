@@ -41,7 +41,7 @@ socket.onmessage = event => {
   if (data.type === 'audio') evidence.audioBytes += Buffer.from(data.audio_event?.audio_base_64 || '', 'base64').length;
   if (data.type === 'agent_response') {
     const response = data.agent_response_event.agent_response;
-    if (response.includes('I’m Pip') || response.includes("I'm Pip")) return;
+    if (response.includes('I’m Cloudy') || response.includes("I'm Cloudy")) return;
     evidence.responses.push(response);
     console.log(`Response ${evidence.responses.length}: ${response}`);
     if (stage === 1) {

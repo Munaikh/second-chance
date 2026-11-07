@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Second Chance</string>
+	<string>Raise</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>second_chance</string>
+	<string>Raise</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -27,7 +27,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Speak with Pip about your synthetic demo finances. Text chat works without the microphone.</string>
+	<string>Speak with Cloudy about your synthetic demo finances. Text chat works without the microphone.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Connect to the local recovery workflow for the demo.</string>
 	<key>NSAppTransportSecurity</key>

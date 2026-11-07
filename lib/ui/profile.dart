@@ -108,7 +108,7 @@ class ProfilePage extends StatelessWidget {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'Built for the NatWest hackathon. The demo clock is 7 November 2026. Forecasts are calculated locally; Pip uses ElevenLabs; recovery plans run through a local n8n workflow.',
+                  'Built for the NatWest hackathon. The demo clock is 7 November 2026. Forecasts are calculated locally; Cloudy uses ElevenLabs; recovery plans run through a local n8n workflow.',
                 ),
                 SizedBox(height: 10),
                 Text(

@@ -7,9 +7,12 @@ import 'package:native_liquid_glass/native_liquid_glass.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:second_chance/core/app_state.dart';
 import 'package:second_chance/ui/design.dart';
+import 'package:second_chance/ui/cloudy.dart';
 import 'package:second_chance/ui/home.dart';
 import 'package:second_chance/ui/support.dart';
 import 'package:second_chance/ui/grow.dart';
+
+final appRouteObserver = RouteObserver<PageRoute<dynamic>>();
 
 void main() {
   final logs = PrintLogCollector();
@@ -82,7 +85,7 @@ class _BootstrapState extends State<_Bootstrap> {
                     ? Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Pip(),
+                          const Cloudy(),
                           const Text('We couldn’t open your saved progress.'),
                           const SizedBox(height: 20),
                           PrimaryButton(
@@ -97,7 +100,7 @@ class _BootstrapState extends State<_Bootstrap> {
                     : const Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Pip(),
+                          Cloudy(),
                           SizedBox(height: 20),
                           CircularProgressIndicator(),
                         ],
@@ -126,158 +129,25 @@ class SecondChanceApp extends StatelessWidget {
     state: state,
     child: MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Second Chance',
+      title: 'Raise',
       theme: appTheme(Brightness.light),
       darkTheme: appTheme(Brightness.dark),
-      navigatorObservers: [LiquidGlassNavigatorObserver()],
+      navigatorObservers: [appRouteObserver, LiquidGlassNavigatorObserver()],
       home: const MainShell(),
     ),
   );
 }
 
-class MainShell extends StatefulWidget {
+class MainShell extends StatelessWidget {
   const MainShell({super.key});
   @override
-  State<MainShell> createState() => _MainShellState();
-}
-
-class _MainShellState extends State<MainShell> {
-  int _index = 0;
-  void select(int index) => setState(() => _index = index);
-  @override
-  Widget build(BuildContext context) {
-    final state = AppScope.of(context);
-    return Scaffold(
-      extendBody: true,
-      body: Column(
-        children: [
-          if (state.persistenceError != null)
-            SafeArea(
-              bottom: false,
-              child: MaterialBanner(
-                content: Text(state.persistenceError!),
-                actions: [
-                  TextButton(
-                    onPressed: state.persist,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: IndexedStack(
-              index: _index,
-              children: [
-                TickerMode(
-                  enabled: _index == 0,
-                  child: PreparePage(
-                    onSupport: () => select(1),
-                    onGrow: () => select(2),
-                  ),
-                ),
-                TickerMode(enabled: _index == 1, child: const SupportPage()),
-                TickerMode(enabled: _index == 2, child: const GrowPage()),
-              ],
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: NativeLiquidGlassUtils.supportsLiquidGlass
-          ? LiquidGlassTabBar(
-              height: 64,
-              currentIndex: _index,
-              selectedItemColor: AppColors.accent(context),
-              onTabSelected: select,
-              items: const [
-                LiquidGlassTabItem(
-                  label: 'Prepare',
-                  icon: NativeLiquidGlassIcon.sfSymbol('sun.horizon'),
-                  selectedIcon: NativeLiquidGlassIcon.sfSymbol(
-                    'sun.horizon.fill',
-                  ),
-                ),
-                LiquidGlassTabItem(
-                  label: 'Support',
-                  icon: NativeLiquidGlassIcon.sfSymbol('heart'),
-                  selectedIcon: NativeLiquidGlassIcon.sfSymbol('heart.fill'),
-                ),
-                LiquidGlassTabItem(
-                  label: 'Grow',
-                  icon: NativeLiquidGlassIcon.sfSymbol('leaf'),
-                  selectedIcon: NativeLiquidGlassIcon.sfSymbol('leaf.fill'),
-                ),
-              ],
-            )
-          : SafeArea(
-              top: false,
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(18, 0, 18, 8),
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: AppColors.surface(context),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: AppColors.line(context)),
-                ),
-                child: Row(
-                  children: [
-                    for (var i = 0; i < 3; i++)
-                      Expanded(
-                        child: _TabItem(
-                          index: i,
-                          selected: _index == i,
-                          onPressed: () => select(i),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-    );
-  }
-}
-
-class _TabItem extends StatelessWidget {
-  const _TabItem({
-    required this.index,
-    required this.selected,
-    required this.onPressed,
-  });
-  final int index;
-  final bool selected;
-  final VoidCallback onPressed;
-  @override
-  Widget build(BuildContext context) => Semantics(
-    selected: selected,
-    child: TextButton(
-      key: ValueKey('tab_$index'),
-      onPressed: onPressed,
-      style: TextButton.styleFrom(
-        foregroundColor: selected
-            ? AppColors.accent(context)
-            : AppColors.muted(context),
-        backgroundColor: selected
-            ? AppColors.canvas(context)
-            : Colors.transparent,
-        padding: const EdgeInsets.symmetric(vertical: 9),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            [
-              Icons.wb_twilight_rounded,
-              Icons.favorite_border_rounded,
-              Icons.spa_outlined,
-            ][index],
-            size: 23,
-          ),
-          const SizedBox(height: 3),
-          Text(
-            ['Prepare', 'Support', 'Grow'][index],
-            style: const TextStyle(fontSize: 11),
-          ),
-        ],
+  Widget build(BuildContext context) => PreparePage(
+    onSupport: () => openPage(context, const SupportDetailPage()),
+    onGrow: () => openPage(
+      context,
+      Scaffold(
+        appBar: AppBar(title: const Text('Your resilience')),
+        body: const GrowPage(),
       ),
     ),
   );

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:second_chance/core/finance.dart';
 import 'package:second_chance/main.dart';
 import 'package:second_chance/ui/design.dart';
+import 'package:second_chance/ui/cloudy.dart';
 import 'package:second_chance/ui/home.dart';
 import 'package:second_chance/ui/support.dart';
 
@@ -44,7 +45,7 @@ class GrowPage extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
-                    Pip(size: 80, celebrating: actionCount > 0),
+                    Cloudy(size: 80, celebrating: actionCount > 0),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -292,7 +293,7 @@ class _CreateGoalPageState extends State<CreateGoalPage> {
     body: ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        const Center(child: Pip(size: 130)),
+        const Center(child: Cloudy(size: 130)),
         const SizedBox(height: 22),
         Text(
           'Make room for\nlife’s surprises.',
@@ -380,7 +381,7 @@ class _RecordSavingPageState extends State<RecordSavingPage> {
     body: ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        const Center(child: Pip(size: 145, celebrating: true)),
+        const Center(child: Cloudy(size: 145, celebrating: true)),
         const SizedBox(height: 22),
         Text(
           'Every little bit\nis a step forward.',

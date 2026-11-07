@@ -61,7 +61,7 @@ class CompanionController extends ChangeNotifier {
       ? 'ElevenLabs · live voice'
       : _textConnected
       ? 'ElevenLabs · live text'
-      : 'Pip · ready to connect';
+      : 'Cloudy · ready to connect';
 
   void _notify() {
     if (!_disposed) notifyListeners();
@@ -135,7 +135,7 @@ class CompanionController extends ChangeNotifier {
             generation != _sessionGeneration) {
           return;
         }
-        error = 'Pip is taking too long. You can retry the connection.';
+        error = 'Cloudy is taking too long. You can retry the connection.';
         unawaited(endSession());
         _replyWithFallback(message);
       });
@@ -230,7 +230,7 @@ class CompanionController extends ChangeNotifier {
           _handleTextClosed(generation);
       }
     } catch (_) {
-      error = 'Pip received an unreadable reply. Please reconnect.';
+      error = 'Cloudy received an unreadable reply. Please reconnect.';
       _notify();
     }
   }
@@ -285,7 +285,7 @@ class CompanionController extends ChangeNotifier {
       if (_disposed || generation != _sessionGeneration) return;
       if (!permission.isGranted) {
         phase = CompanionPhase.error;
-        error = 'Microphone access is off. Enable Second Chance in Settings, or continue by text.';
+        error = 'Microphone access is off. Enable Raise in Settings, or continue by text.';
         _notify();
         return;
       }
@@ -509,7 +509,7 @@ String companionVoiceErrorMessage(Object? failure) {
   final detail = failure.toString().toLowerCase();
   if (RegExp(r'permission|notallowed|not allowed|denied|not authorized')
       .hasMatch(detail)) {
-    return 'Microphone access is off. Enable microphone access for Second Chance in Settings, then retry voice. You can continue by text.';
+    return 'Microphone access is off. Enable microphone access for Raise in Settings, then retry voice. You can continue by text.';
   }
   if (detail.contains('timeout') || detail.contains('timed out')) {
     return 'Voice took too long to connect. Check your internet connection and try again, or continue by text.';

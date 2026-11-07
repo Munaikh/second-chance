@@ -6,6 +6,7 @@ import 'package:second_chance/core/finance.dart';
 import 'package:second_chance/main.dart';
 import 'package:second_chance/ui/companion_page.dart';
 import 'package:second_chance/ui/design.dart';
+import 'package:second_chance/ui/cloudy.dart';
 import 'package:second_chance/ui/home.dart';
 
 class SupportPage extends StatelessWidget {
@@ -51,7 +52,7 @@ class SupportContent extends StatelessWidget {
         Surface(
           child: Row(
             children: [
-              const Pip(size: 84),
+              const Cloudy(size: 84),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -226,7 +227,7 @@ class SupportContent extends StatelessWidget {
         ActionRow(
           icon: CupertinoIcons.bubble_left_bubble_right,
           title: 'Prefer to talk first?',
-          subtitle: 'Pip can help you put it into words',
+          subtitle: 'Cloudy can help you put it into words',
           onTap: () => openPage(
             context,
             const CompanionPage(

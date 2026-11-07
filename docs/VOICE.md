@@ -1,9 +1,9 @@
-# Pip: live ElevenLabs companion
+# Cloudy: live ElevenLabs companion
 
 The Flutter app connects to a dedicated public **synthetic-data demonstration** agent:
 
 - Agent: `agent_8301m6v7kzdgfza9119295h54skt`
-- Name: Second Chance · Pip · UK demo
+- Name: Cloudy
 - Model: Gemini 2.5 Flash; voice: Charlotte (`XB0fDUnXU5powFXDhCwa`).
 - Created for this prototype on 7 November 2026; maximum two concurrent calls and 100 sessions/day.
 - Voice recording disabled, transcript/audio deletion enabled, retention set to one day. This is not certified zero-retention mode. Use synthetic data only.
@@ -16,7 +16,7 @@ Text uses ElevenLabs' documented WebSocket protocol with a text-only session ove
 
 The app sends the active profile, dated calculated forecast, scenario and goal as contextual updates. It converts every integer-pence field into an exact formatted GBP string before sending model context, so the language model does not perform currency-unit arithmetic. It supplies the last twelve visible live conversation messages when moving between text and voice sessions. Changing the selected demo profile ends the connection and clears the transcript. The agent cannot change finances or submit drafts; n8n recovery is a separate explicit app action.
 
-“Stop voice playback” ends the voice session immediately, which stops microphone capture and output. The official SDK does not expose an independent output-pause API. Starting voice again retains the visible conversation through a contextual update. Mute controls input; it does not pause Pip's output.
+“Stop voice playback” ends the voice session immediately, which stops microphone capture and output. The official SDK does not expose an independent output-pause API. Starting voice again retains the visible conversation through a contextual update. Mute controls input; it does not pause Cloudy's output.
 
 When ElevenLabs is unreachable, a text reply can use deterministic guidance based on the supplied financial snapshot. These replies carry `isFallback: true` and the mode becomes **Calculated demo guidance**. A visible connection error explains how to reconnect. This mode is not live AI or ElevenLabs audio.
 
@@ -56,3 +56,5 @@ node integrations/elevenlabs/verify.mjs --speech-input /tmp/sc-question.pcm /tmp
 ```
 
 The result is saved to `speech-verification.json`. On 7 November 2026, the service recognised both spoken questions, correctly explained the £180 gap on 12 November and returned a contextual recovery-plan follow-up with 967,680 bytes of generated audio (`conv_5701m6v830chfk1tptwtta19z273`). This verifies ASR → conversation → TTS at the service boundary. Mobile WebRTC microphone capture, speaker routing and audible playback remain separate device checks.
+
+On 7 November 2026, the existing agent was renamed **Cloudy** for **Raise**. A read-back verified the new display name and prompt identity, with model, voice, financial instructions, privacy and call limits preserved. A live text-only turn confirmed “I'm Cloudy, and I'm part of Raise”; the result is recorded in `integrations/elevenlabs/identity-verification.json`. The first message remains empty so the app can provide financial context before the first reply. Existing text, voice and speech verification JSON files record earlier runs under the historical Pip name; they have been retained unchanged.

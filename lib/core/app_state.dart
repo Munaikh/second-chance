@@ -52,8 +52,12 @@ class PositiveAction {
 }
 
 class AppState extends ChangeNotifier {
-  AppState(this._prefs, {RecoveryService? recoveryService})
-    : _recoveryService = recoveryService ?? RecoveryService() {
+  AppState(
+    this._prefs, {
+    RecoveryService? recoveryService,
+    CompanionController? companion,
+  }) : _recoveryService = recoveryService ?? RecoveryService(),
+       companion = companion ?? CompanionController() {
     final raw = _prefs.getString(storageKey);
     if (raw != null) {
       try {
@@ -70,7 +74,7 @@ class AppState extends ChangeNotifier {
   static const storageKey = 'second_chance.demo.v1';
   final SharedPreferences _prefs;
   final RecoveryService _recoveryService;
-  final companion = CompanionController();
+  final CompanionController companion;
   final Map<String, dynamic> _saved = {};
   String _profileId = DemoProfiles.all.first.id;
   DemoProfile get profile => DemoProfiles.all.firstWhere(

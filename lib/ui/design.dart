@@ -1,9 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 abstract final class AppColors {
-  static const purple = Color(0xFF57258A);
+  static const primary = Color(0xFF216F92);
   static const lavender = Color(0xFFD5B9F6);
   static const green = Color(0xFF22664B);
   static const amber = Color(0xFF954211);
@@ -23,11 +22,11 @@ ThemeData appTheme(Brightness brightness) {
   final canvas = dark ? const Color(0xFF131318) : const Color(0xFFF7F7F9);
   final surface = dark ? const Color(0xFF1E1E25) : const Color(0xFFFDFDFE);
   final border = dark ? const Color(0xFF383840) : const Color(0xFFE5E5EB);
-  final accent = dark ? const Color(0xFFD5B9F6) : AppColors.purple;
+  final accent = dark ? const Color(0xFFA3D8EB) : AppColors.primary;
   final scheme = ColorScheme(
     brightness: brightness,
     primary: accent,
-    onPrimary: dark ? const Color(0xFF25113C) : const Color(0xFFFCFAFF),
+    onPrimary: dark ? const Color(0xFF112C3C) : const Color(0xFFFCFAFF),
     secondary: dark ? const Color(0xFF8DD9B4) : AppColors.green,
     onSecondary: dark ? const Color(0xFF102D20) : const Color(0xFFFAFDFB),
     error: dark ? const Color(0xFFFFB4AA) : const Color(0xFFA32F32),
@@ -341,155 +340,6 @@ class ActionRow extends StatelessWidget {
             : null),
     onTap: onTap,
   );
-}
-
-class Pip extends StatelessWidget {
-  const Pip({
-    super.key,
-    this.size = 110,
-    this.speaking = false,
-    this.listening = false,
-    this.celebrating = false,
-  });
-  final double size;
-  final bool speaking;
-  final bool listening;
-  final bool celebrating;
-  @override
-  Widget build(BuildContext context) {
-    Widget child = CustomPaint(
-      size: Size.square(size),
-      painter: _PipPainter(speaking, listening, celebrating),
-    );
-    if (!MediaQuery.disableAnimationsOf(context)) {
-      child = child
-          .animate(onPlay: (controller) => controller.repeat(reverse: true))
-          .moveY(
-            begin: speaking ? -3 : -1,
-            end: speaking ? 3 : 1,
-            duration: Duration(milliseconds: speaking ? 400 : 1700),
-            curve: Curves.easeInOut,
-          )
-          .rotate(
-            begin: listening ? -.015 : 0,
-            end: listening ? .015 : 0,
-            duration: 900.ms,
-          );
-    }
-    return Semantics(
-      label:
-          'Pip, your financial companion${speaking
-              ? ', speaking'
-              : listening
-              ? ', listening'
-              : ''}',
-      image: true,
-      child: SizedBox.square(dimension: size, child: child),
-    );
-  }
-}
-
-class _PipPainter extends CustomPainter {
-  const _PipPainter(this.speaking, this.listening, this.celebrating);
-  final bool speaking;
-  final bool listening;
-  final bool celebrating;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final s = size.width / 120;
-    canvas.scale(s);
-    canvas.drawOval(
-      const Rect.fromLTWH(25, 105, 72, 7),
-      Paint()..color = const Color(0xFF57258A).withValues(alpha: .09),
-    );
-    final body = Path()
-      ..moveTo(24, 80)
-      ..cubicTo(9, 43, 36, 19, 65, 23)
-      ..cubicTo(94, 20, 110, 42, 100, 75)
-      ..cubicTo(98, 90, 90, 100, 76, 102)
-      ..cubicTo(49, 110, 31, 98, 24, 80);
-    canvas.drawPath(
-      body,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFE4CCFF), Color(0xFFBD91ED)],
-        ).createShader(const Rect.fromLTWH(16, 20, 90, 85)),
-    );
-    canvas.drawOval(
-      const Rect.fromLTWH(14, 67, 18, 11),
-      Paint()..color = const Color(0xFFD7B6F7),
-    );
-    canvas.drawOval(
-      Rect.fromLTWH(93, celebrating ? 47 : 64, 18, 11),
-      Paint()..color = const Color(0xFFC89DF0),
-    );
-    final leaf = Path()
-      ..moveTo(61, 24)
-      ..quadraticBezierTo(63, 4, 85, 9)
-      ..quadraticBezierTo(84, 26, 61, 24);
-    canvas.drawPath(leaf, Paint()..color = const Color(0xFF589A73));
-    final eye = Paint()..color = const Color(0xFF3D205B);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(44, celebrating ? 56 : 51, 6, celebrating ? 4 : 11),
-        const Radius.circular(4),
-      ),
-      eye,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(73, celebrating ? 56 : 51, 6, celebrating ? 4 : 11),
-        const Radius.circular(4),
-      ),
-      eye,
-    );
-    canvas.drawCircle(
-      const Offset(37, 69),
-      5,
-      Paint()..color = const Color(0xFFE992AE).withValues(alpha: .6),
-    );
-    canvas.drawCircle(
-      const Offset(85, 69),
-      5,
-      Paint()..color = const Color(0xFFE992AE).withValues(alpha: .6),
-    );
-    if (speaking) {
-      canvas.drawOval(const Rect.fromLTWH(56, 68, 12, 15), eye);
-    } else {
-      canvas.drawPath(
-        Path()
-          ..moveTo(54, 71)
-          ..quadraticBezierTo(61, 79, 68, 71),
-        Paint()
-          ..color = const Color(0xFF3D205B)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.6
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-    if (listening) {
-      for (var i = 0; i < 3; i++) {
-        canvas.drawArc(
-          Rect.fromCircle(center: const Offset(103, 47), radius: 7.0 + i * 5),
-          -.8,
-          1.6,
-          false,
-          Paint()
-            ..color = const Color(0xFF8350B0).withValues(alpha: .8 - i * .2)
-            ..strokeWidth = 2
-            ..style = PaintingStyle.stroke,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_PipPainter old) =>
-      speaking != old.speaking ||
-      listening != old.listening ||
-      celebrating != old.celebrating;
 }
 
 void showNotice(BuildContext context, String text) =>

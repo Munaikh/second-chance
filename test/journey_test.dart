@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:second_chance/core/app_state.dart';
+import 'package:second_chance/core/companion.dart';
 import 'package:second_chance/main.dart';
 import 'package:second_chance/ui/design.dart';
 import 'package:second_chance/ui/forecast.dart';
@@ -13,7 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   late SharedPreferences prefs;
   AppState createState(WidgetTester tester) {
-    final state = AppState(prefs);
+    final state = AppState(prefs, companion: CompanionController(agentId: ''));
     addTearDown(() async {
       final saved = state.persist();
       await tester.pump();
@@ -62,12 +63,10 @@ void main() {
       final state = createState(tester);
       await tester.pumpWidget(SecondChanceApp(state: state));
       await tester.pump(const Duration(milliseconds: 400));
-      await reveal(
-        tester,
-        find.byKey(const ValueKey('open_forecast')),
-        find.byType(PreparePage),
-      );
-      await tester.tap(find.byKey(const ValueKey('open_forecast')));
+      await tester.tap(find.byKey(const ValueKey('home_menu')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.text('Your forecast'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(ForecastPage), findsOneWidget);
@@ -113,7 +112,11 @@ void main() {
       final state = createState(tester);
       await tester.pumpWidget(SecondChanceApp(state: state));
       await tester.pump(const Duration(milliseconds: 400));
-      await tester.tap(find.byKey(const ValueKey('tab_2')));
+      await tester.tap(find.byKey(const ValueKey('home_menu')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.text('Goals & progress'));
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       await reveal(
         tester,
@@ -212,6 +215,11 @@ void main() {
         ),
       );
       await tester.pump(const Duration(milliseconds: 400));
+      if (page.value is PreparePage) {
+        await tester.tap(find.byKey(const ValueKey('expand_overview')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+      }
       expect(
         tester.takeException(),
         isNull,

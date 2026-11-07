@@ -2,7 +2,21 @@
 
 Checks completed on 7 November 2026 using Flutter 3.47.9, Dart 3.13.7 and Xcode 27.2. Mobile runtime: iPhone 18 Pro Simulator, iOS 27.2.
 
-## Completed checks
+## Mascot-first redesign
+
+The original prototype was committed and pushed as `8f92fc0` before the redesign. The app is now Raise, with Cloudy, an original animated cloud, above a draggable financial sheet with a pinned expand/collapse control, a permanent voice/text composer and inline conversations. Forecast, recovery and progress screens remain reachable through the sheet and menu. Existing device progress is preserved; internal package and storage identifiers are retained.
+
+The supplied assistant screenshots were the primary layout reference: spacious sky background, a character behind a light sheet, a dark input bar and a compact character header during conversation. Artwork and controls are original project assets; see [Cloudy animation provenance and controls](cloud-mascot.md). Lottie playback is controlled by conversation state and respects reduced motion.
+
+Five additional home regressions cover initial mascot/composer access, sheet expansion and scrolling, calculated chat and returning to Home, keyboard/2× text layout, and profile isolation. Earlier forecast, goal, draft and persistence journeys were adapted to menu navigation. Live simulator checks verified sheet expansion, internal scrolling, collapse and a contextual ElevenLabs text reply.
+
+The final Raise build has **42 passing Flutter tests**, including parsing the real Cloudy asset, switching all three playback ranges and freezing under reduced motion. Source analysis is clean. The final iOS Simulator build and launch succeeded, and the reference-matching cloud, glasses and face were visually inspected above the sheet.
+
+Voice testing encountered a native iOS Simulator abort: Apple `AudioUnitInitialize` timed out while LiveKit/WebRTC initialized audio capture or playback. The same native boundary appears in crashes before the visual redesign. Live ElevenLabs text works, including the verified Cloudy/Raise identity. Current simulator audio stability is unresolved; no physical-device audio acceptance is claimed.
+
+## Original prototype verification
+
+These checks describe the baseline implementation and its original navigation. The later redesign uses a menu rather than tabs.
 
 - `flutter analyze`: no issues. `flutter test`: **36 passing tests**. Backend: **6 passing Node tests**.
 - Native iOS build and launch succeeded with Swift Package Manager.
