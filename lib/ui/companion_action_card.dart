@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:second_chance/main.dart';
 import 'package:second_chance/ui/design.dart';
+import 'package:second_chance/ui/generated_ui_card.dart';
 import 'package:second_chance/ui/support.dart';
 
 class CompanionActionCard extends StatelessWidget {
@@ -17,6 +18,12 @@ class CompanionActionCard extends StatelessWidget {
     );
     final forecast = artifact['forecast'] as Map? ?? {};
     final type = artifact['type'];
+    if (type == 'generated_ui') {
+      return Material(
+        type: MaterialType.transparency,
+        child: GeneratedUiCard(artifact: artifact),
+      );
+    }
     final title = switch (type) {
       'forecast' => 'Forecast updated',
       'recovery_plan' => 'Your plan is ready',

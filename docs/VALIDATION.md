@@ -4,7 +4,11 @@ Checks completed on 7 November 2026 using Flutter 3.47.9, Dart 3.13.7 and Xcode 
 
 ## Phone voice, motion and time travel
 
-Current checks: `flutter analyze` has no issues; all **90 offline Flutter tests** pass. The separate opt-in live app-action test also passes with Gemini 3.8 Flash configured as primary, provider fallback to Gemini 3.5 Flash observed, and real n8n execution `10`.
+The generative UI update was checked directly in the running iOS app, without running the automated test suite at the user's request. A live Cloudy request rendered a native forecast chart, exact financial metrics and scenario sliders. A native simulator touch set the extra bill to £200, and tapping Apply scenario returned the calculated £380 shortfall on 12 November with a £768 closing balance. The 36.3 MB iPhone release built, installed and launched successfully. The fifth tool and updated prompt were read back from ElevenLabs; the existing model, voice, privacy and four action tools were preserved.
+
+A second live request generated a goal form, checklist and comparison button. Tapping the generated button executed the historical comparison and returned £1,695 expected versus £485 synthetic actual. The live check exposed a missing Material surface around checklist tiles; this was fixed and hot reloaded, with no further runtime errors in the follow-up. The new goal form's Save action and voice-triggered generated panels were not separately exercised on the physical phone.
+
+Before the generative UI update, `flutter analyze` had no issues and all **90 offline Flutter tests** passed. The separate opt-in live app-action test also passed with Gemini 3.8 Flash configured as primary, provider fallback to Gemini 3.5 Flash observed, and real n8n execution `10`.
 
 The latest phone build uses Motor for the shared Cloudy/greeting transition and spring-driven sheet exit, preserves the mounted conversation and draft, and removes the redundant hamburger menu. Forecast, support and savings remain reachable through the sheet; chat Back and profile controls remain available. Reduced motion snaps to the selected state.
 

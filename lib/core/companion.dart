@@ -61,6 +61,7 @@ class CompanionController extends ChangeNotifier {
     'build_recovery_plan',
     'set_emergency_goal',
     'compare_history',
+    'show_ui',
   };
   final Map<String, Future<Map<String, Object?>>> _toolCalls = {};
 
@@ -378,6 +379,11 @@ class CompanionController extends ChangeNotifier {
     'message': message,
     'summary': message,
   };
+
+  Future<Map<String, Object?>> performAction(
+    String name,
+    Map<String, dynamic> parameters,
+  ) => _executeAction(name, parameters);
 
   Future<Map<String, Object?>> _executeAction(
     String name,

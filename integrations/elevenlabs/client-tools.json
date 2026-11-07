@@ -105,7 +105,7 @@
     "tool_config": {
       "type": "client",
       "name": "compare_history",
-      "description": "Compare the expected historical pattern with synthetic recorded balances for the selected Raise profile. Returns exact expected, actual and difference figures for 10 October–6 November 2026. The estimate is reconstructed from the preceding four demo weeks, not an archived forecast or proof of forecasting accuracy. Does not change finances.",
+      "description": "Compare the expected historical pattern with synthetic recorded balances for the selected Raise profile. Returns exact expected, actual and difference figures for 10 October\u20136 November 2026. The estimate is reconstructed from the preceding four demo weeks, not an archived forecast or proof of forecasting accuracy. Does not change finances.",
       "expects_response": true,
       "response_timeout_secs": 30,
       "execution_mode": "immediate",
@@ -113,6 +113,29 @@
         "type": "object",
         "properties": {},
         "required": []
+      }
+    }
+  },
+  {
+    "id": "tool_2801m6vhxswtep2tmgmqtck3jgas",
+    "tool_config": {
+      "type": "client",
+      "name": "show_ui",
+      "description": "Display a useful, compact generative UI directly in Cloudy's Raise conversation when the user asks to see, visualise or build an interface, explore scenarios interactively, or create a savings goal with missing details. Presentation only: this does not change finances or save a goal. Money and charts bind to current app data; never provide invented numeric values. Wait for the returned result and do not repeat the same successful UI call.",
+      "expects_response": true,
+      "response_timeout_secs": 30,
+      "execution_mode": "immediate",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ui_json": {
+            "type": "string",
+            "description": "A JSON-encoded document {title:string,description?:string,components:[...]}, with at most 8 components. Allowed catalog only: {type:'text',text:string}; {type:'metrics',source:'forecast'|'history'|'goal'}; {type:'chart',source:'forecast'|'history'}; {type:'scenario_controls'}; {type:'goal_form',title?:string,target_gbp?:number}; {type:'checklist',items:[string]}; {type:'choices',options:[{label:string,prompt:string}]}; {type:'action',label:string,prompt:string}. Use concise UK English and GBP. No HTML, scripts, URLs, model-generated financial values or extra component types. Goal defaults may use only the user's stated target. Buttons use short prompts for the next app action. Apply/Save controls make changes only after the user chooses them."
+          }
+        },
+        "required": [
+          "ui_json"
+        ]
       }
     }
   }

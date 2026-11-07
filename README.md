@@ -8,6 +8,8 @@ Voice mode gives Cloudy the upper two-thirds of the screen, with Mute, End, Chat
 
 Cloudy can carry out requests through four client tools: model a what-if, prepare a real n8n support plan and editable draft, create a savings goal, and compare historical balances. Results appear inside the conversation. Existing goals and drafts require confirmation before replacement; recorded savings are preserved. These actions do not transfer money or send requests externally.
 
+A fifth tool, `show_ui`, generates native interfaces in the conversation: charts, live metrics, scenario sliders, goal forms, checklists and choice buttons. Try **Explore my forecast** or **Plan a little buffer** on Home, or ask Cloudy to build a view. Financial values come from the app; Apply and Save use its existing validated actions. Generated panels live in the conversation; saved goals and drafts retain their usual persistence.
+
 ## Run
 
 Checked toolchain: Flutter 3.47.9 / Dart 3.13.7, Node 26, Xcode 27.2. Use Node 24+ and a booted iOS Simulator.
@@ -67,6 +69,7 @@ Flutter: Cloudy Home + financial sheet + inline conversation
 | Accounts, history and household circumstances | Synthetic fixtures; no Open Banking connection |
 | Forecasts and comparisons | Deterministic daily closing balances, integer pence |
 | Cloudy text and voice | Live ElevenLabs using calculated context |
+| Generated conversation UI | Model-composed native components; app-bound financial figures and validated actions |
 | Connection failure guidance | Explicitly labelled calculated demo guidance |
 | Plan and editable request | Genuine local n8n execution; deterministic personalisation |
 | Guidance | Curated primary-source summaries and visible links; no vector RAG claim |

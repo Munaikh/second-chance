@@ -84,10 +84,13 @@ class CompanionComposer extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   children: [
                     for (final prompt in const [
-                      ('Explain my forecast', 'Why might I run short?'),
+                      (
+                        'Explore my forecast',
+                        'Show me an interactive forecast with a chart and controls to try changes.',
+                      ),
                       (
                         'Plan a little buffer',
-                        'How can I start a small emergency buffer?',
+                        'Show me a simple form to plan an emergency savings goal.',
                       ),
                       (
                         'Help with my bills',

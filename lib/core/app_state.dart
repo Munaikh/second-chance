@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:second_chance/core/companion.dart';
 import 'package:second_chance/core/finance.dart';
+import 'package:second_chance/core/generated_ui.dart';
 import 'package:second_chance/core/history_comparison.dart';
 import 'package:second_chance/core/recovery.dart';
 
@@ -293,6 +294,26 @@ class AppState extends ChangeNotifier {
     try {
       final Map<String, Object?> result;
       switch (name) {
+        case 'show_ui':
+          _validateKeys(parameters, const {'ui_json'});
+          final source = parameters['ui_json'];
+          if (source is! String) {
+            throw const FormatException(
+              'ui_json must be a JSON document string.',
+            );
+          }
+          final document = parseGeneratedUi(source);
+          result = {
+            'ok': true,
+            'action': name,
+            'profileId': profile.id,
+            'summary': '${document['title']} is ready in the conversation.',
+            'artifact': {
+              'type': 'generated_ui',
+              'profileId': profile.id,
+              ...document,
+            },
+          };
         case 'update_scenario':
           _validateKeys(parameters, const {
             'income_change_percent',
