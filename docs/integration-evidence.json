@@ -1,0 +1,14 @@
+{
+  "verifiedAt": "2026-11-07T15:16:29.902Z",
+  "method": "POST /api/recovery -> n8n webhook -> Code -> Respond to Webhook",
+  "workflow": {
+    "name": "Second Chance · Personal recovery plan",
+    "executionId": "6",
+    "executedAt": "2026-11-07T15:16:29.893Z",
+    "engine": "n8n"
+  },
+  "personalisedName": "Maya Patel",
+  "forecastGapPence": 18000,
+  "sourceCount": 3,
+  "draftCharacters": 1009
+}

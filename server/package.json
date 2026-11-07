@@ -1,0 +1,15 @@
+{
+  "name": "second-chance-local-services",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node api.mjs",
+    "test": "node --test test/*.test.mjs",
+    "build:workflow": "node ../scripts/build-workflow.mjs"
+  },
+  "dependencies": {
+    "n8n": "2.46.6"
+  },
+  "engines": { "node": ">=24" }
+}

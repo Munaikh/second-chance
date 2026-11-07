@@ -1,0 +1,15 @@
+{
+  "agentId": "agent_8301m6v7kzdgfza9119295h54skt",
+  "mode": "speech-input-and-output",
+  "checkedAt": "2026-11-07T14:55:02.799Z",
+  "conversationId": "conv_5701m6v830chfk1tptwtta19z273",
+  "responses": [
+    "You're looking at a shortfall of one hundred and eighty pounds on the twelfth of November. This is because your rent and energy bills are due before an estimated freelance invoice is expected on the sixteenth of November.",
+    "You're looking at a shortfall of one hundred and eighty pounds on the twelfth of November. A practical next step would be to use the 'Build a recovery plan' feature in the app. This allows you to review an editable draft plan to help manage the timing of your rent and energy bills before your freelance invoice comes in."
+  ],
+  "transcripts": [
+    "Why will I be short on the 12th of November?",
+    "And what is one practical next step for that shortfall?"
+  ],
+  "audioBytes": 967680
+}
