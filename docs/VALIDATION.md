@@ -2,9 +2,19 @@
 
 Checks completed on 7 November 2026 using Flutter 3.47.9, Dart 3.13.7 and Xcode 27.2. Mobile runtime: iPhone 18 Pro Simulator, iOS 27.2.
 
+## Phone voice, motion and time travel
+
+Current checks: `flutter analyze` has no issues; all **58 Flutter tests** pass.
+
+The latest phone build uses Motor for the shared Cloudy/greeting transition and spring-driven sheet exit, preserves the mounted conversation and draft, and removes the redundant hamburger menu. Forecast, support and savings remain reachable through the sheet; chat Back and profile controls remain available. Reduced motion snaps to the selected state.
+
+Forecast lines now use bounded cubic curves through daily closing values, with paired exact balances and differences at the selected date. Expected vs actual reconstructs 10 October–6 November using only the preceding four synthetic demo weeks, then compares it with held-out synthetic recorded balances. It does not represent an archived forecast, future actuals or prediction-accuracy evidence.
+
+The physical iPhone reproduced a DNS lookup failure for `api.elevenlabs.io`, affecting both text and voice. On mobile data with Wi-Fi off and Tailscale on, the user confirmed that Cloudy heard and answered two spoken turns. The app reports DNS failures accurately, bounds startup/cleanup and supports copying sanitized diagnostics. Speech direction tags are hidden from the displayed transcript. The venue Wi-Fi DNS configuration remains unchanged; mobile data is the verified demo route.
+
 ## Mascot-first redesign
 
-The original prototype was committed and pushed as `8f92fc0` before the redesign. The app is now Raise, with Cloudy, an original animated cloud, above a draggable financial sheet with a pinned expand/collapse control, a permanent voice/text composer and inline conversations. Forecast, recovery and progress screens remain reachable through the sheet and menu. Existing device progress is preserved; internal package and storage identifiers are retained.
+The original prototype was committed and pushed as `8f92fc0` before the redesign. The app is now Raise, with Cloudy, an original animated cloud, above a draggable financial sheet with a pinned expand/collapse control, a permanent voice/text composer and inline conversations. Forecast, recovery and progress screens remain reachable through the sheet. Existing device progress is preserved; internal package and storage identifiers are retained.
 
 The supplied assistant screenshots were the primary layout reference: spacious sky background, a character behind a light sheet, a dark input bar and a compact character header during conversation. Artwork and controls are original project assets; see [Cloudy animation provenance and controls](cloud-mascot.md). Lottie playback is controlled by conversation state and respects reduced motion.
 
@@ -16,7 +26,7 @@ Voice testing encountered a native iOS Simulator abort: Apple `AudioUnitInitiali
 
 ## Original prototype verification
 
-These checks describe the baseline implementation and its original navigation. The later redesign uses a menu rather than tabs.
+These checks describe the baseline implementation and its original navigation. The current Home exposes destinations through its financial sheet.
 
 - `flutter analyze`: no issues. `flutter test`: **36 passing tests**. Backend: **6 passing Node tests**.
 - Native iOS build and launch succeeded with Swift Package Manager.

@@ -6,6 +6,7 @@ import 'package:second_chance/main.dart';
 import 'package:second_chance/ui/design.dart';
 import 'package:second_chance/ui/home.dart';
 import 'package:second_chance/ui/profile.dart';
+import 'package:second_chance/ui/support.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -67,8 +68,10 @@ void main() {
         find.byKey(const ValueKey('start_voice')).hitTestable(),
         findsOneWidget,
       );
+      expect(find.byKey(const ValueKey('home_menu')), findsNothing);
+      expect(find.byTooltip('Open navigation'), findsNothing);
       expect(
-        find.byKey(const ValueKey('home_menu')).hitTestable(),
+        find.byKey(const ValueKey('open_profiles')).hitTestable(),
         findsOneWidget,
       );
       expect(
@@ -80,6 +83,23 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('The financial sheet opens support without a navigation menu', (
+    tester,
+  ) async {
+    usePhoneSize(tester);
+    final state = createState(tester);
+    await tester.pumpWidget(SecondChanceApp(state: state));
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.tap(find.byKey(const ValueKey('expand_overview')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.tap(find.text('Make a plan'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(SupportDetailPage), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'Financial sheet expands, collapses, drags upward and scrolls its content',

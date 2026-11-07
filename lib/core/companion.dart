@@ -26,8 +26,21 @@ class CompanionController extends ChangeNotifier {
       'ELEVENLABS_AGENT_ID',
       defaultValue: 'agent_8301m6v7kzdgfza9119295h54skt',
     ),
-  });
+    eleven.ConversationClient Function(eleven.ConversationCallbacks)?
+    voiceClientFactory,
+    Future<bool> Function()? requestMicrophonePermission,
+  }) : _voiceClientFactory = voiceClientFactory ?? _createVoiceClient,
+       _requestMicrophonePermission =
+           requestMicrophonePermission ?? _microphonePermission;
 
+  static eleven.ConversationClient _createVoiceClient(
+    eleven.ConversationCallbacks callbacks,
+  ) => eleven.ConversationClient(callbacks: callbacks);
+  static Future<bool> _microphonePermission() async =>
+      (await Permission.microphone.request()).isGranted;
+  final eleven.ConversationClient Function(eleven.ConversationCallbacks)
+  _voiceClientFactory;
+  final Future<bool> Function() _requestMicrophonePermission;
   final String agentId;
   final List<CompanionMessage> _messages = [];
   Map<String, Object?> _context = {};
@@ -39,12 +52,16 @@ class CompanionController extends ChangeNotifier {
   String? _conversationId;
   bool _disposed = false;
   bool _ending = false;
+  bool _startingVoice = false;
   bool _usingFallback = false;
   bool _textConnected = false;
   int _sessionGeneration = 0;
 
   CompanionPhase phase = CompanionPhase.idle;
   String? error;
+  String voiceConnectionStage = 'idle';
+  String? lastVoiceDiagnostic;
+  String? lastTextDiagnostic;
 
   List<CompanionMessage> get messages => List.unmodifiable(_messages);
   bool get liveConfigured => agentId.isNotEmpty;
@@ -139,11 +156,12 @@ class CompanionController extends ChangeNotifier {
         unawaited(endSession());
         _replyWithFallback(message);
       });
-    } catch (_) {
+    } catch (failure) {
       if (_disposed || generation != _sessionGeneration) return;
+      _recordTextFailure(failure);
       await endSession();
       if (_disposed) return;
-      error = 'Live chat is unavailable. This reply uses your calculated demo figures. Try voice or send again to reconnect.';
+      error = companionTextErrorMessage(failure);
       _replyWithFallback(message);
     }
   }
@@ -166,8 +184,22 @@ class CompanionController extends ChangeNotifier {
     _textReady = Completer<void>();
     _textSubscription = channel.stream.listen(
       (event) => _handleTextEvent(event, generation),
-      onError: (Object _) => _handleTextClosed(generation),
-      onDone: () => _handleTextClosed(generation),
+      onError: (Object failure) {
+        if (generation == _sessionGeneration && !_disposed) {
+          _recordTextFailure(failure);
+        }
+        _handleTextClosed(generation);
+      },
+      onDone: () {
+        if (generation == _sessionGeneration && !_ending && !_disposed) {
+          _recordTextFailure(
+            StateError(
+              'WebSocket closed: code=${channel.closeCode}, reason=${channel.closeReason ?? 'none'}',
+            ),
+          );
+        }
+        _handleTextClosed(generation);
+      },
     );
     _sendSocket({
       'type': 'conversation_initiation_client_data',
@@ -266,10 +298,21 @@ class CompanionController extends ChangeNotifier {
   }
 
   Future<void> startVoice() async {
+    if (_startingVoice) return;
+    _startingVoice = true;
+    try {
+      await _startVoice();
+    } finally {
+      _startingVoice = false;
+    }
+  }
+
+  Future<void> _startVoice() async {
     if (_disposed || isVoiceActive || phase == CompanionPhase.connecting) {
       return;
     }
-    await endSession();
+    await endSession(preparingVoice: true);
+    if (_disposed) return;
     if (!liveConfigured) {
       phase = CompanionPhase.error;
       error = 'Voice needs an ElevenLabs agent. You can still use calculated text guidance.';
@@ -279,24 +322,31 @@ class CompanionController extends ChangeNotifier {
     final generation = _sessionGeneration;
     phase = CompanionPhase.connecting;
     error = null;
+    lastVoiceDiagnostic = null;
+    voiceConnectionStage = 'microphone permission';
     _notify();
     try {
-      final permission = await Permission.microphone.request();
+      final permission = await _requestMicrophonePermission().timeout(
+        const Duration(seconds: 20),
+      );
       if (_disposed || generation != _sessionGeneration) return;
-      if (!permission.isGranted) {
+      if (!permission) {
         phase = CompanionPhase.error;
         error = 'Microphone access is off. Enable Raise in Settings, or continue by text.';
         _notify();
         return;
       }
-    } catch (_) {
+    } catch (failure) {
+      if (_disposed || generation != _sessionGeneration) return;
+      _recordVoiceFailure(failure);
       phase = CompanionPhase.error;
-      error = 'We couldn’t access the microphone. You can continue by text and try voice again.';
+      error = companionVoiceErrorMessage(failure);
       _notify();
       return;
     }
-    final client = eleven.ConversationClient(
-      callbacks: eleven.ConversationCallbacks(
+    voiceConnectionStage = 'voice transport';
+    final client = _voiceClientFactory(
+      eleven.ConversationCallbacks(
         onConnect: ({required conversationId}) {
           if (_disposed || generation != _sessionGeneration) return;
           _conversationId = conversationId;
@@ -330,6 +380,7 @@ class CompanionController extends ChangeNotifier {
         },
         onError: (message, [details]) {
           if (_disposed || generation != _sessionGeneration || _ending) return;
+          _recordVoiceFailure(details ?? message);
           error = companionVoiceErrorMessage(details ?? message);
           phase = CompanionPhase.error;
           _notify();
@@ -343,10 +394,14 @@ class CompanionController extends ChangeNotifier {
           .timeout(const Duration(seconds: 25));
       if (_disposed || generation != _sessionGeneration) {
         if (_voice == client) {
-          await client.endSession();
-          client.dispose();
           _voice = null;
+          await _releaseVoice(client);
         }
+        return;
+      }
+      if (phase == CompanionPhase.error) {
+        _voice = null;
+        await _releaseVoice(client);
         return;
       }
       client.sendContextualUpdate(_contextText);
@@ -356,19 +411,43 @@ class CompanionController extends ChangeNotifier {
         );
       }
       phase = CompanionPhase.listening;
+      voiceConnectionStage = 'connected';
       _usingFallback = false;
       _notify();
     } catch (failure) {
-      if (_voice == client) {
-        await client.endSession();
-        client.dispose();
-        _voice = null;
-      }
       if (_disposed || generation != _sessionGeneration) return;
+      _recordVoiceFailure(failure);
       phase = CompanionPhase.error;
       error = companionVoiceErrorMessage(failure);
       _notify();
+      if (_voice == client) {
+        _voice = null;
+        _sessionGeneration++;
+        await _releaseVoice(client);
+      }
     }
+  }
+
+  void _recordTextFailure(Object failure) {
+    lastTextDiagnostic =
+        '${failure.runtimeType}: ${redactVoiceDiagnostic(failure.toString())}';
+    debugPrint('[Cloudy text] $lastTextDiagnostic');
+  }
+
+  void _recordVoiceFailure(Object failure) {
+    lastVoiceDiagnostic =
+        '$voiceConnectionStage: ${failure.runtimeType}: ${redactVoiceDiagnostic(failure.toString())}';
+    debugPrint('[Cloudy voice] $lastVoiceDiagnostic');
+  }
+
+  Future<void> _releaseVoice(eleven.ConversationClient? client) async {
+    if (client == null) return;
+    try {
+      await client.endSession().timeout(const Duration(seconds: 2));
+    } catch (_) {}
+    try {
+      client.dispose();
+    } catch (_) {}
   }
 
   Future<void> toggleMute() async {
@@ -381,25 +460,30 @@ class CompanionController extends ChangeNotifier {
 
   Future<void> _closeText() async {
     _textConnected = false;
-    await _textSubscription?.cancel();
+    final subscription = _textSubscription;
+    final channel = _text;
     _textSubscription = null;
-    await _text?.sink.close();
     _text = null;
     _textReady = null;
+    try {
+      await subscription?.cancel().timeout(const Duration(seconds: 2));
+    } catch (_) {}
+    try {
+      await channel?.sink.close().timeout(const Duration(seconds: 2));
+    } catch (_) {}
   }
 
-  Future<void> endSession() async {
+  Future<void> endSession({bool preparingVoice = false}) async {
     _ending = true;
     _sessionGeneration++;
     _replyTimer?.cancel();
-    await _closeText();
     final voice = _voice;
     _voice = null;
-    await voice?.endSession();
-    voice?.dispose();
-    _ending = false;
-    phase = CompanionPhase.idle;
+    phase = preparingVoice ? CompanionPhase.connecting : CompanionPhase.idle;
+    voiceConnectionStage = preparingVoice ? 'closing previous session' : 'idle';
     _notify();
+    await Future.wait([_closeText(), _releaseVoice(voice)]);
+    _ending = false;
   }
 
   void _replyWithFallback(String input) {
@@ -505,7 +589,21 @@ Object? companionContextForModel(Object? value) {
   return value;
 }
 
+const _dnsConnectionMessage =
+    'Your network can’t find ElevenLabs. Check Wi-Fi, mobile data or VPN DNS settings, then reconnect.';
+
+bool _isDnsConnectionFailure(Object? failure) => RegExp(
+  r'failed host lookup|could not resolve host|name or service not known|nodename nor servname',
+  caseSensitive: false,
+).hasMatch(failure.toString());
+
+String companionTextErrorMessage(Object? failure) =>
+    _isDnsConnectionFailure(failure)
+    ? '$_dnsConnectionMessage This reply uses your calculated demo figures.'
+    : 'Live chat is unavailable. This reply uses your calculated demo figures. Send again to reconnect.';
+
 String companionVoiceErrorMessage(Object? failure) {
+  if (_isDnsConnectionFailure(failure)) return _dnsConnectionMessage;
   final detail = failure.toString().toLowerCase();
   if (RegExp(r'permission|notallowed|not allowed|denied|not authorized')
       .hasMatch(detail)) {
@@ -516,3 +614,13 @@ String companionVoiceErrorMessage(Object? failure) {
   }
   return 'Voice is unavailable. Check microphone access and your internet connection, then retry. You can continue by text.';
 }
+
+String redactVoiceDiagnostic(String message) => message
+    .replaceAll(RegExp(r'eyJ[A-Za-z0-9_.-]+'), '<redacted-token>')
+    .replaceAll(
+      RegExp(
+        r'(?:access_token|token|authorization|xi-api-key)[=:][^\s&,]+',
+        caseSensitive: false,
+      ),
+      '<redacted-credential>',
+    );

@@ -63,10 +63,10 @@ void main() {
       final state = createState(tester);
       await tester.pumpWidget(SecondChanceApp(state: state));
       await tester.pump(const Duration(milliseconds: 400));
-      await tester.tap(find.byKey(const ValueKey('home_menu')));
+      await tester.tap(find.byKey(const ValueKey('expand_overview')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      await tester.tap(find.text('Your forecast'));
+      await tester.tap(find.byKey(const ValueKey('open_forecast')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(ForecastPage), findsOneWidget);
@@ -112,10 +112,15 @@ void main() {
       final state = createState(tester);
       await tester.pumpWidget(SecondChanceApp(state: state));
       await tester.pump(const Duration(milliseconds: 400));
-      await tester.tap(find.byKey(const ValueKey('home_menu')));
+      await tester.tap(find.byKey(const ValueKey('expand_overview')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      await tester.tap(find.text('Goals & progress'));
+      await reveal(
+        tester,
+        find.text('Start your emergency buffer'),
+        find.byType(PreparePage),
+      );
+      await tester.tap(find.text('Start your emergency buffer'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       await reveal(

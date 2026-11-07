@@ -2,7 +2,7 @@
 
 A kinder path through financial setbacks. A voice and chat first Flutter companion for the NatWest hackathon: **Prepare → Support → Grow**.
 
-Cloudy, an animated cloud, lives on Home and peeks over a draggable financial sheet. Controlled Lottie segments give Cloudy a gentle idle blink, attentive listening and expressive speaking; reduced motion freezes the character. Talk by tapping Cloudy or the microphone, or type into the persistent composer. Drag the sheet up to explore your forecast, support plan and savings; use the menu for direct navigation. All customer records are synthetic; all amounts are GBP.
+Cloudy, an animated cloud, lives on Home and peeks over a draggable financial sheet. Controlled Lottie segments give Cloudy a gentle idle blink, attentive listening and expressive speaking; reduced motion freezes the character. Talk by tapping Cloudy or the microphone, or type into the persistent composer. A Motor spring moves the sheet away and carries Cloudy into the conversation header. Drag the sheet up for forecast, support and savings; every destination is available there. All customer records are synthetic; all amounts are GBP.
 
 ## Run
 
@@ -20,7 +20,7 @@ Keep services running. In a second terminal:
 flutter run -d <your-ios-simulator-id>
 ```
 
-The first build fetches Swift packages for voice. The project uses Swift Package Manager and retains the starter’s iOS 15 target. The primary demo target is iPhone 18 Pro Simulator, iOS 27.2. The main navigation is a mascot-centred Home with an expandable sheet and menu.
+The first build fetches Swift packages for voice. The project uses Swift Package Manager and retains the starter’s iOS 15 target. The primary demo target is iPhone 18 Pro Simulator, iOS 27.2. The main navigation is a mascot-centred Home with an expandable sheet.
 
 The dedicated public ElevenLabs demo agent works by default. No API key is bundled. It accepts fictional demo context only. To override it:
 
@@ -30,6 +30,8 @@ flutter run --dart-define=ELEVENLABS_AGENT_ID=your_public_demo_agent_id
 
 iOS Simulator uses `http://127.0.0.1:8787`; Android Emulator uses `http://10.0.2.2:8787` in debug. A physical phone needs a separately configured reachable backend. `--dart-define=API_BASE_URL=https://your-host` overrides the endpoint. Cloud deployment is a follow-on milestone.
 
+For a phone connected through Tailscale, start local services and run `tailscale serve --bg http://127.0.0.1:8787` on the Mac. Follow its activation link if Serve is disabled. Build the app with `flutter run -d <phone-id> --dart-define=API_BASE_URL=https://<your-mac>.<your-tailnet>.ts.net`, using the HTTPS URL printed by Serve. Check that URL with `/health` in phone Safari first. Keep the Mac awake and the services running. Changing this build setting requires a full relaunch. Cloudy connects directly to ElevenLabs over the phone's internet connection.
+
 ## Demonstrate
 
 Follow [the three-minute journey and pitch](docs/DEMO.md). The avatar opens profile switching and **Reset all demo progress**.
@@ -38,6 +40,8 @@ Follow [the three-minute journey and pitch](docs/DEMO.md). The avatar opens prof
 - **Alex:** steady earnings and a positive forecast; guidance shifts towards building a stronger buffer and understanding credit.
 
 Forecasts use a fixed **7 November 2026** clock. Savings records use the date recorded. Goals, positive actions, plans and edited drafts survive restarting, separately for each profile. Exploratory scenarios reset on profile change or restart.
+
+Time travel includes **Look ahead** and **Expected vs actual**. The historical comparison reconstructs a simple estimate for 10 October–6 November from the preceding four demo weeks, then compares it with synthetic recorded balances. It is not an archived forecast or evidence of prediction accuracy. Curves join daily closing values without overshooting; date selection shows both exact balances and their difference.
 
 ## Architecture
 

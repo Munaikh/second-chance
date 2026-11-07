@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:smooth_sheets/smooth_sheets.dart';
 import 'package:second_chance/core/companion.dart';
 import 'package:second_chance/core/finance.dart';
@@ -12,6 +13,7 @@ import 'package:second_chance/ui/design.dart';
 import 'package:second_chance/ui/cloudy.dart';
 import 'package:second_chance/ui/forecast.dart';
 import 'package:second_chance/ui/profile.dart';
+import 'package:second_chance/ui/home_motion.dart';
 
 class PreparePage extends StatefulWidget {
   const PreparePage({
@@ -159,8 +161,7 @@ class _PreparePageState extends State<PreparePage>
 
   Future<void> _closeChat() async {
     _focus.unfocus();
-    await _companion!.endSession();
-    if (!mounted) return;
+    unawaited(_companion!.endSession());
     if (widget.startInConversation) {
       Navigator.of(context).maybePop();
     } else {
@@ -168,47 +169,9 @@ class _PreparePageState extends State<PreparePage>
     }
   }
 
-  Future<void> _menu() async {
-    _focus.unfocus();
-    final choice = await showMenu<String>(
-      context: context,
-      position: const RelativeRect.fromLTRB(18, 112, 200, 0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-      items: const [
-        PopupMenuItem(
-          value: 'forecast',
-          child: ListTile(
-            leading: Icon(CupertinoIcons.calendar),
-            title: Text('Your forecast'),
-            contentPadding: EdgeInsets.zero,
-          ),
-        ),
-        PopupMenuItem(
-          value: 'support',
-          child: ListTile(
-            leading: Icon(CupertinoIcons.heart),
-            title: Text('Support plan'),
-            contentPadding: EdgeInsets.zero,
-          ),
-        ),
-        PopupMenuItem(
-          value: 'grow',
-          child: ListTile(
-            leading: Icon(CupertinoIcons.leaf_arrow_circlepath),
-            title: Text('Goals & progress'),
-            contentPadding: EdgeInsets.zero,
-          ),
-        ),
-      ],
-    );
-    if (!mounted || choice == null) return;
-    if (choice == 'forecast') {
-      openPage(context, const ForecastPage());
-    } else if (choice == 'support') {
-      widget.onSupport();
-    } else {
-      widget.onGrow();
-    }
+  Future<void> _reconnectVoice() async {
+    await _companion!.endSession();
+    if (mounted) await _voice();
   }
 
   void _toggleSheet(double rest, double expanded) {
@@ -229,12 +192,8 @@ class _PreparePageState extends State<PreparePage>
     final state = AppScope.of(context);
     final companion = _companion!;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final reduced = MediaQuery.disableAnimationsOf(context);
     final top = MediaQuery.viewPaddingOf(context).top;
     final foreground = dark ? const Color(0xFFF0F6FC) : AssistantColors.ink;
-    final duration = reduced
-        ? Duration.zero
-        : const Duration(milliseconds: 280);
     final talking = companion.phase == CompanionPhase.speaking;
     return PopScope(
       canPop: !_chatOpen || widget.startInConversation,
@@ -285,13 +244,28 @@ class _PreparePageState extends State<PreparePage>
                       child: Stack(
                         clipBehavior: Clip.hardEdge,
                         children: [
-                          if (!_chatOpen && !compact)
+                          if (!compact)
                             Positioned(
                               top: top + 96,
                               left: 26,
                               right: 24,
-                              child: ExcludeSemantics(
-                                excluding: _chatOpen,
+                              child: ConversationMotion(
+                                open: _chatOpen,
+                                builder: (context, progress, child) =>
+                                    ExcludeSemantics(
+                                      excluding: _chatOpen,
+                                      child: Opacity(
+                                        opacity: (1 - progress).clamp(0.0, 1.0),
+                                        child: Transform.translate(
+                                          offset: Offset(0, -24 * progress),
+                                          child: Transform.scale(
+                                            alignment: Alignment.topLeft,
+                                            scale: 1 - .12 * progress,
+                                            child: child,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                 child: Text.rich(
                                   TextSpan(
                                     children: [
@@ -321,42 +295,80 @@ class _PreparePageState extends State<PreparePage>
                                 ),
                               ),
                             ),
-                          AnimatedPositioned(
-                            duration: duration,
-                            curve: const Cubic(.23, 1, .32, 1),
-                            top: _chatOpen ? top + 2 : mascotTop,
-                            left:
-                                (box.maxWidth - (_chatOpen ? 78 : largeSize)) /
-                                2,
-                            width: _chatOpen ? 78 : largeSize,
-                            height: _chatOpen ? 78 : largeSize,
+                          ConversationMotion(
+                            open: _chatOpen,
+                            builder: (context, progress, child) {
+                              final size =
+                                  largeSize + (78 - largeSize) * progress;
+                              return Positioned(
+                                top:
+                                    mascotTop +
+                                    (top + 2 - mascotTop) * progress,
+                                left: (box.maxWidth - size) / 2,
+                                width: largeSize,
+                                height: largeSize,
+                                child: Transform.scale(
+                                  alignment: Alignment.topLeft,
+                                  scale: size / largeSize,
+                                  child: child,
+                                ),
+                              );
+                            },
                             child: Cloudy(
                               key: const ValueKey('home_mascot'),
-                              size: _chatOpen ? 78 : largeSize,
+                              size: largeSize,
                               phase: companion.phase,
                               onTap: _voice,
                             ),
                           ),
-                          if (_chatOpen)
-                            Positioned.fill(
-                              top: top + 92,
+                          Positioned.fill(
+                            top: top + 92,
+                            child: ConversationMotion(
+                              open: _chatOpen,
+                              builder: (context, progress, child) {
+                                if (!_chatOpen && progress.abs() < .001) {
+                                  return const SizedBox.shrink();
+                                }
+                                return IgnorePointer(
+                                  ignoring: !_chatOpen,
+                                  child: ExcludeSemantics(
+                                    excluding: !_chatOpen,
+                                    child: Opacity(
+                                      opacity: progress.clamp(0.0, 1.0),
+                                      child: Transform.translate(
+                                        offset: Offset(0, 18 * (1 - progress)),
+                                        child: child,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                               child: _ConversationBody(
                                 companion: companion,
                                 scroll: _chatScroll,
-                                onRetry: () => companion.endSession(),
+                                onRetry: _reconnectVoice,
                                 onSupport: widget.onSupport,
                               ),
                             ),
+                          ),
                           IgnorePointer(
                             ignoring: _chatOpen,
                             child: ExcludeSemantics(
                               excluding: _chatOpen,
-                              child: AnimatedSlide(
-                                duration: duration,
-                                curve: const Cubic(.23, 1, .32, 1),
-                                offset: _chatOpen
-                                    ? const Offset(0, 1)
-                                    : Offset.zero,
+                              child: ConversationMotion(
+                                open: _chatOpen,
+                                builder: (context, progress, child) =>
+                                    Transform.translate(
+                                      key: const ValueKey('overview_motion'),
+                                      offset: Offset(
+                                        0,
+                                        box.maxHeight * progress,
+                                      ),
+                                      child: Opacity(
+                                        opacity: (1 - progress).clamp(0.0, 1.0),
+                                        child: child,
+                                      ),
+                                    ),
                                 child: SheetViewport(
                                   padding: EdgeInsets.only(
                                     top: top + 74,
@@ -404,16 +416,15 @@ class _PreparePageState extends State<PreparePage>
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                AssistantIconButton(
-                                  key: const ValueKey('home_menu'),
-                                  icon: _chatOpen
-                                      ? CupertinoIcons.chevron_left
-                                      : CupertinoIcons.line_horizontal_3,
-                                  label: _chatOpen
-                                      ? 'Back to your overview'
-                                      : 'Open navigation',
-                                  onPressed: _chatOpen ? _closeChat : _menu,
-                                ),
+                                if (_chatOpen)
+                                  AssistantIconButton(
+                                    key: const ValueKey('home_menu'),
+                                    icon: CupertinoIcons.chevron_left,
+                                    label: 'Back to your overview',
+                                    onPressed: _closeChat,
+                                  )
+                                else
+                                  const SizedBox.square(dimension: 48),
                                 if (!_chatOpen)
                                   Text(
                                     'raise',
@@ -791,6 +802,26 @@ class _ConversationBody extends StatelessWidget {
                     onPressed: onRetry,
                     child: const Text('Reconnect'),
                   ),
+                  if (companion.lastVoiceDiagnostic != null ||
+                      companion.lastTextDiagnostic != null)
+                    TextButton(
+                      onPressed: () async {
+                        await Clipboard.setData(
+                          ClipboardData(
+                            text:
+                                companion.lastVoiceDiagnostic ??
+                                companion.lastTextDiagnostic!,
+                          ),
+                        );
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Connection details copied'),
+                          ),
+                        );
+                      },
+                      child: const Text('Copy connection details'),
+                    ),
                 ],
               ),
             ),

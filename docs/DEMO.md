@@ -6,7 +6,7 @@ Start local services, confirm `/health` and launch the app. Tap the avatar → R
 2. **Listen · 30 seconds.** Tap Cloudy or the microphone on Home, or type into the persistent input. Ask “Why might I run short?” then “What should I do first?” Cloudy moves into the conversation header and the sheet makes space for chat. Show mute and Stop voice. Text needs no microphone. Use the back control to return to the overview.
 3. **Compare · 30 seconds.** Set the weekly spending reduction to £25. The first gap falls from £180 to £155. Small changes help without erasing the timing problem. Reset for the baseline recovery request.
 4. **Support · 45 seconds.** Open **Make a recovery plan**, choose **Less income**, optionally add a fictional note and create the plan. Review the editable request, change a bracketed detail and copy it. Show evidence, source links and the real n8n run ID. Nothing is sent.
-5. **Grow · 35 seconds.** On Home, use the menu → **Goals & progress**, or the emergency buffer row in the expanded sheet. Create a £500 buffer and record £5 already set aside. Show the progress milestone and credit-report action. Restart and reopen Goals & progress to demonstrate persistence.
+5. **Grow · 35 seconds.** On Home, expand the sheet and open the emergency buffer row. Create a £500 buffer and record £5 already set aside. Show the progress milestone and credit-report action. Restart and reopen the buffer to demonstrate persistence.
 6. **Contrast · 10 seconds.** Switch to Alex. Balance, forecast, circumstances and guidance change. Noor’s progress stays with Noor.
 
 ## One-minute pitch

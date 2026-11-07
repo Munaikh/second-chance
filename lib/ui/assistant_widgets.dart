@@ -286,7 +286,15 @@ class CompanionBubble extends StatelessWidget {
                 ),
               ),
             SelectableText(
-              message.text,
+              user
+                  ? message.text
+                  : message.text.replaceAll(
+                      RegExp(
+                        r'\[(?:calm|warm|slow|curious|whispering|happy|sad|excited|serious|reassuring|thoughtful|friendly|empathetic|laughs|sighs|clears throat|short pause|long pause)\]\s*',
+                        caseSensitive: false,
+                      ),
+                      '',
+                    ),
               style: TextStyle(
                 color: user
                     ? AssistantColors.onComposer

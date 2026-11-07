@@ -7,10 +7,17 @@ import 'package:second_chance/main.dart';
 import 'package:second_chance/ui/companion_page.dart';
 import 'package:second_chance/ui/design.dart';
 import 'package:second_chance/ui/home.dart';
+import 'package:second_chance/ui/history_comparison.dart';
 import 'package:second_chance/ui/support.dart';
 
-class ForecastPage extends StatelessWidget {
+class ForecastPage extends StatefulWidget {
   const ForecastPage({super.key});
+  @override
+  State<ForecastPage> createState() => _ForecastPageState();
+}
+
+class _ForecastPageState extends State<ForecastPage> {
+  bool _lookBack = false;
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
@@ -21,229 +28,251 @@ class ForecastPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
         children: [
-          const StatusPill(
-            '7 Nov – 6 Dec 2026 · estimates',
-            icon: CupertinoIcons.calendar,
-          ),
-          const SizedBox(height: 17),
-          Text(
-            'See a different\ntomorrow.',
-            style: Theme.of(context).textTheme.headlineLarge,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Try a change. See what it means for your money.',
-            style: TextStyle(color: AppColors.muted(context)),
+          CupertinoSlidingSegmentedControl<bool>(
+            key: const ValueKey('time_travel_view'),
+            groupValue: _lookBack,
+            onValueChanged: (value) {
+              if (value != null) setState(() => _lookBack = value);
+            },
+            children: const {
+              false: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                child: Text('Look ahead', textAlign: TextAlign.center),
+              ),
+              true: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                child: Text('Expected vs actual', textAlign: TextAlign.center),
+              ),
+            },
           ),
           const SizedBox(height: 24),
-          Surface(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ForecastMetric(
-                        label: 'Original low',
-                        day: state.baseline.lowestDay,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _ForecastMetric(
-                        label: 'Scenario low',
-                        day: forecast.lowestDay,
-                        highlight: true,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                ForecastChart(
-                  forecast: forecast,
-                  baseline: state.hasScenario ? state.baseline : null,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  forecast.firstShortfall == null
-                      ? 'Your daily closing balance stays above £0 in this scenario.'
-                      : 'First shortfall: ${formatPence(-forecast.firstShortfall!.balancePence)} on ${formatDate(forecast.firstShortfall!.date)}.',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                if (state.hasScenario)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      'Lowest balance changes by ${formatPence(forecast.lowestDay.balancePence - state.baseline.lowestDay.balancePence, decimals: true)}.',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-              ],
+          if (_lookBack)
+            ExpectedActualComparison(profile: state.profile)
+          else ...[
+            const StatusPill(
+              '7 Nov – 6 Dec 2026 · estimates',
+              icon: CupertinoIcons.calendar,
             ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'What if…',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              TextButton(
-                key: const ValueKey('reset_scenario'),
-                onPressed: state.hasScenario
-                    ? () => state.setScenario(const Scenario())
-                    : null,
-                child: const Text('Reset'),
-              ),
-            ],
-          ),
-          Surface(
-            child: Column(
-              children: [
-                _ScenarioSlider(
-                  label: 'My earnings change',
-                  valueLabel:
-                      '${scenario.incomePercentChange > 0 ? '+' : ''}${scenario.incomePercentChange.round()}%',
-                  value: scenario.incomePercentChange,
-                  min: -40,
-                  max: 40,
-                  divisions: 16,
-                  sliderKey: 'income_slider',
-                  onChanged: (v) => state.setScenario(
-                    Scenario(
-                      incomePercentChange: v,
-                      unexpectedExpensePence: scenario.unexpectedExpensePence,
-                      weeklySavingPence: scenario.weeklySavingPence,
-                    ),
-                  ),
-                ),
-                Divider(color: AppColors.line(context)),
-                _ScenarioSlider(
-                  label: 'An unexpected bill',
-                  valueLabel: formatPence(scenario.unexpectedExpensePence),
-                  value: scenario.unexpectedExpensePence / 100,
-                  min: 0,
-                  max: 400,
-                  divisions: 16,
-                  sliderKey: 'expense_slider',
-                  onChanged: (v) => state.setScenario(
-                    Scenario(
-                      incomePercentChange: scenario.incomePercentChange,
-                      unexpectedExpensePence: (v * 100).round(),
-                      weeklySavingPence: scenario.weeklySavingPence,
-                    ),
-                  ),
-                ),
-                Divider(color: AppColors.line(context)),
-                _ScenarioSlider(
-                  label: 'Spend a little less each week',
-                  valueLabel: formatPence(scenario.weeklySavingPence),
-                  value: scenario.weeklySavingPence / 100,
-                  min: 0,
-                  max: 40,
-                  divisions: 8,
-                  sliderKey: 'saving_slider',
-                  onChanged: (v) => state.setScenario(
-                    Scenario(
-                      incomePercentChange: scenario.incomePercentChange,
-                      unexpectedExpensePence: scenario.unexpectedExpensePence,
-                      weeklySavingPence: (v * 100).round(),
-                    ),
-                  ),
-                ),
-                Text(
-                  'Extra bills land on 10 Nov. Spending reductions apply only to flexible costs, up to what’s planned.',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
+            const SizedBox(height: 17),
+            Text(
+              'See a different\ntomorrow.',
+              style: Theme.of(context).textTheme.headlineLarge,
             ),
-          ),
-          const SizedBox(height: 20),
-          Surface(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'What’s behind the dip?',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 12),
-                ...forecast.pressureCauses.map(
-                  (cause) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          CupertinoIcons.circle_filled,
-                          size: 5,
-                          color: AppColors.accent(context),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(child: Text(cause)),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 10),
+            Text(
+              'Try a change. See what it means for your money.',
+              style: TextStyle(color: AppColors.muted(context)),
             ),
-          ),
-          const SizedBox(height: 20),
-          PrimaryButton(
-            label: 'Talk through this scenario',
-            icon: CupertinoIcons.bubble_left_bubble_right,
-            onPressed: () => openPage(
-              context,
-              const CompanionPage(
-                initialQuestion:
-                    'Can you explain my forecast and the changes I’ve tried?',
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              key: const ValueKey('forecast_support'),
-              onPressed: () => openPage(context, const SupportDetailPage()),
-              child: const Text('Make a recovery plan'),
-            ),
-          ),
-          const SizedBox(height: 18),
-          ExpansionTile(
-            tilePadding: EdgeInsets.zero,
-            title: const Text('How this is calculated'),
-            children: [
-              Surface(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${formatPence(forecast.openingBalancePence)} opening\n+ ${formatPence(forecast.totalIncomePence)} expected income\n− ${formatPence(forecast.totalOutgoingsPence)} expected spending\n= ${formatPence(forecast.endingBalancePence)} on 6 Dec',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 16),
-                    ...FinanceEngine.assumptions.map(
-                      (a) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Text(
-                          a,
-                          style: Theme.of(context).textTheme.bodySmall,
+            const SizedBox(height: 24),
+            Surface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ForecastMetric(
+                          label: 'Original low',
+                          day: state.baseline.lowestDay,
                         ),
                       ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _ForecastMetric(
+                          label: 'Scenario low',
+                          day: forecast.lowestDay,
+                          highlight: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  ForecastChart(
+                    forecast: forecast,
+                    baseline: state.hasScenario ? state.baseline : null,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    forecast.firstShortfall == null
+                        ? 'Your daily closing balance stays above £0 in this scenario.'
+                        : 'First shortfall: ${formatPence(-forecast.firstShortfall!.balancePence)} on ${formatDate(forecast.firstShortfall!.date)}.',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  if (state.hasScenario)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Lowest balance changes by ${formatPence(forecast.lowestDay.balancePence - state.baseline.lowestDay.balancePence, decimals: true)}.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ),
-                    TextButton(
-                      onPressed: () =>
-                          openPage(context, const DailyBalancesPage()),
-                      child: const Text('View every daily balance'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'What if…',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                TextButton(
+                  key: const ValueKey('reset_scenario'),
+                  onPressed: state.hasScenario
+                      ? () => state.setScenario(const Scenario())
+                      : null,
+                  child: const Text('Reset'),
+                ),
+              ],
+            ),
+            Surface(
+              child: Column(
+                children: [
+                  _ScenarioSlider(
+                    label: 'My earnings change',
+                    valueLabel:
+                        '${scenario.incomePercentChange > 0 ? '+' : ''}${scenario.incomePercentChange.round()}%',
+                    value: scenario.incomePercentChange,
+                    min: -40,
+                    max: 40,
+                    divisions: 16,
+                    sliderKey: 'income_slider',
+                    onChanged: (v) => state.setScenario(
+                      Scenario(
+                        incomePercentChange: v,
+                        unexpectedExpensePence: scenario.unexpectedExpensePence,
+                        weeklySavingPence: scenario.weeklySavingPence,
+                      ),
                     ),
-                  ],
+                  ),
+                  Divider(color: AppColors.line(context)),
+                  _ScenarioSlider(
+                    label: 'An unexpected bill',
+                    valueLabel: formatPence(scenario.unexpectedExpensePence),
+                    value: scenario.unexpectedExpensePence / 100,
+                    min: 0,
+                    max: 400,
+                    divisions: 16,
+                    sliderKey: 'expense_slider',
+                    onChanged: (v) => state.setScenario(
+                      Scenario(
+                        incomePercentChange: scenario.incomePercentChange,
+                        unexpectedExpensePence: (v * 100).round(),
+                        weeklySavingPence: scenario.weeklySavingPence,
+                      ),
+                    ),
+                  ),
+                  Divider(color: AppColors.line(context)),
+                  _ScenarioSlider(
+                    label: 'Spend a little less each week',
+                    valueLabel: formatPence(scenario.weeklySavingPence),
+                    value: scenario.weeklySavingPence / 100,
+                    min: 0,
+                    max: 40,
+                    divisions: 8,
+                    sliderKey: 'saving_slider',
+                    onChanged: (v) => state.setScenario(
+                      Scenario(
+                        incomePercentChange: scenario.incomePercentChange,
+                        unexpectedExpensePence: scenario.unexpectedExpensePence,
+                        weeklySavingPence: (v * 100).round(),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    'Extra bills land on 10 Nov. Spending reductions apply only to flexible costs, up to what’s planned.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Surface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'What’s behind the dip?',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  ...forecast.pressureCauses.map(
+                    (cause) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            CupertinoIcons.circle_filled,
+                            size: 5,
+                            color: AppColors.accent(context),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(child: Text(cause)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            PrimaryButton(
+              label: 'Talk through this scenario',
+              icon: CupertinoIcons.bubble_left_bubble_right,
+              onPressed: () => openPage(
+                context,
+                const CompanionPage(
+                  initialQuestion:
+                      'Can you explain my forecast and the changes I’ve tried?',
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                key: const ValueKey('forecast_support'),
+                onPressed: () => openPage(context, const SupportDetailPage()),
+                child: const Text('Make a recovery plan'),
+              ),
+            ),
+            const SizedBox(height: 18),
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: const Text('How this is calculated'),
+              children: [
+                Surface(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${formatPence(forecast.openingBalancePence)} opening\n+ ${formatPence(forecast.totalIncomePence)} expected income\n− ${formatPence(forecast.totalOutgoingsPence)} expected spending\n= ${formatPence(forecast.endingBalancePence)} on 6 Dec',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      ...FinanceEngine.assumptions.map(
+                        (a) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            a,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            openPage(context, const DailyBalancesPage()),
+                        child: const Text('View every daily balance'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -336,10 +365,13 @@ class ForecastChart extends StatefulWidget {
     required this.forecast,
     this.baseline,
     this.compact = false,
+    this.primaryLabel = 'Your scenario',
+    this.baselineLabel = 'Original',
   });
   final Forecast forecast;
   final Forecast? baseline;
   final bool compact;
+  final String primaryLabel, baselineLabel;
   @override
   State<ForecastChart> createState() => _ForecastChartState();
 }
@@ -349,6 +381,7 @@ class _ForecastChartState extends State<ForecastChart> {
   @override
   Widget build(BuildContext context) {
     final days = widget.forecast.days;
+    if (days.isEmpty) return const Text('No daily balances available.');
     final selected = _index ?? days.indexOf(widget.forecast.lowestDay);
     final index = selected.clamp(0, days.length - 1);
     final day = days[index];
@@ -372,10 +405,10 @@ class _ForecastChartState extends State<ForecastChart> {
                         size: 8,
                       ),
                       const SizedBox(width: 6),
-                      const Flexible(
+                      Flexible(
                         child: Text(
-                          'Your scenario',
-                          style: TextStyle(fontSize: 12),
+                          widget.primaryLabel,
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ),
                     ],
@@ -390,10 +423,10 @@ class _ForecastChartState extends State<ForecastChart> {
                           size: 13,
                         ),
                         const SizedBox(width: 5),
-                        const Flexible(
+                        Flexible(
                           child: Text(
-                            'Original',
-                            style: TextStyle(fontSize: 12),
+                            widget.baselineLabel,
+                            style: const TextStyle(fontSize: 12),
                           ),
                         ),
                       ],
@@ -403,40 +436,56 @@ class _ForecastChartState extends State<ForecastChart> {
             ),
           ),
         LayoutBuilder(
-          builder: (context, constraints) => GestureDetector(
-            onTapDown: widget.compact
-                ? null
-                : (details) => setState(
-                    () => _index =
-                        ((details.localPosition.dx / constraints.maxWidth) *
-                                (days.length - 1))
-                            .round()
-                            .clamp(0, days.length - 1),
+          builder: (context, constraints) {
+            void select(double position) => setState(
+              () => _index =
+                  ((position - 5) /
+                          math.max(1, constraints.maxWidth - 10) *
+                          (days.length - 1))
+                      .round()
+                      .clamp(0, days.length - 1),
+            );
+            return GestureDetector(
+              onTapDown: widget.compact
+                  ? null
+                  : (details) => select(details.localPosition.dx),
+              onHorizontalDragStart: widget.compact
+                  ? null
+                  : (details) => select(details.localPosition.dx),
+              onHorizontalDragUpdate: widget.compact
+                  ? null
+                  : (details) => select(details.localPosition.dx),
+              child: Semantics(
+                label:
+                    '${widget.primaryLabel} chart. Lowest balance ${formatPence(widget.forecast.lowestDay.balancePence)} on ${formatDate(widget.forecast.lowestDay.date)}. Daily closing values. Curves join the daily points.',
+                image: true,
+                child: CustomPaint(
+                  size: Size(constraints.maxWidth, widget.compact ? 100 : 160),
+                  painter: _ForecastPainter(
+                    days,
+                    widget.baseline?.days,
+                    AppColors.accent(context),
+                    AppColors.line(context),
+                    AppColors.muted(context),
+                    index,
                   ),
-            child: Semantics(
-              label:
-                  'Forecast chart. Lowest balance ${formatPence(widget.forecast.lowestDay.balancePence)} on ${formatDate(widget.forecast.lowestDay.date)}. Daily closing estimates.',
-              image: true,
-              child: CustomPaint(
-                size: Size(constraints.maxWidth, widget.compact ? 100 : 160),
-                painter: _ForecastPainter(
-                  days,
-                  widget.baseline?.days,
-                  AppColors.accent(context),
-                  AppColors.line(context),
-                  AppColors.muted(context),
-                  index,
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
         const SizedBox(height: 9),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('7 Nov', style: Theme.of(context).textTheme.bodySmall),
-            Text('6 Dec', style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              formatDate(days.first.date),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            Text(
+              formatDate(days.last.date),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
         ),
         if (!widget.compact) ...[
@@ -458,25 +507,56 @@ class _ForecastChartState extends State<ForecastChart> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 Text(
-                  formatPence(day.balancePence, decimals: true),
+                  '${widget.primaryLabel}: ${formatPence(day.balancePence, decimals: true)}',
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
+                if (widget.baseline != null &&
+                    index < widget.baseline!.days.length) ...[
+                  Text(
+                    '${widget.baselineLabel}: ${formatPence(widget.baseline!.days[index].balancePence, decimals: true)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  Text(
+                    'Difference: ${formatPence(day.balancePence - widget.baseline!.days[index].balancePence, decimals: true)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
               ],
             ),
           ),
-          Slider(
-            value: index.toDouble(),
-            min: 0,
-            max: (days.length - 1).toDouble(),
-            divisions: days.length - 1,
-            semanticFormatterCallback: (v) =>
-                '${formatDate(days[v.round()].date)}: ${formatPence(days[v.round()].balancePence)}',
-            onChanged: (v) => setState(() => _index = v.round()),
+          if (days.length > 1)
+            Slider(
+              key: const ValueKey('forecast_date_slider'),
+              value: index.toDouble(),
+              min: 0,
+              max: (days.length - 1).toDouble(),
+              divisions: days.length - 1,
+              semanticFormatterCallback: (v) =>
+                  '${formatDate(days[v.round()].date)}: ${formatPence(days[v.round()].balancePence)}',
+              onChanged: (v) => setState(() => _index = v.round()),
+            ),
+          Text(
+            'Smooth curves connect daily closing balances. Select a date for exact values.',
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ],
     );
   }
+}
+
+Path smoothCashflowPath(List<Offset> points) {
+  final path = Path();
+  if (points.isEmpty) return path;
+  path.moveTo(points.first.dx, points.first.dy);
+  for (var i = 1; i < points.length; i++) {
+    final before = points[i - 1];
+    final after = points[i];
+    final middle = (before.dx + after.dx) / 2;
+    // Horizontal tangents keep the curve inside each pair of daily values.
+    path.cubicTo(middle, before.dy, middle, after.dy, after.dx, after.dy);
+  }
+  return path;
 }
 
 class _ForecastPainter extends CustomPainter {
@@ -502,7 +582,7 @@ class _ForecastPainter extends CustomPainter {
         .max(10000, all.map((d) => d.balancePence).reduce(math.max))
         .toDouble();
     final span = high - low;
-    double x(int i) => 5 + i / (days.length - 1) * (size.width - 10);
+    double x(int i) => 5 + i / math.max(1, days.length - 1) * (size.width - 10);
     double y(int amount) => 8 + (high - amount) / span * (size.height - 20);
     final zero = y(0);
     if (low < 0) {
@@ -530,27 +610,68 @@ class _ForecastPainter extends CustomPainter {
           ..strokeWidth = 1,
       );
     }
-    void drawLine(List<ForecastDay> values, Color line, double stroke) {
-      final path = Path()..moveTo(x(0), y(values[0].balancePence));
-      for (var i = 1; i < values.length; i++) {
-        path.lineTo(x(i), y(values[i - 1].balancePence));
-        path.lineTo(x(i), y(values[i].balancePence));
+    Path series(List<ForecastDay> values) => smoothCashflowPath([
+      for (var i = 0; i < values.length; i++)
+        Offset(x(i), y(values[i].balancePence)),
+    ]);
+    final mainPath = series(days);
+    final area = Path.from(mainPath)
+      ..lineTo(x(days.length - 1), size.height - 8)
+      ..lineTo(x(0), size.height - 8)
+      ..close();
+    canvas.drawPath(
+      area,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [color.withValues(alpha: .14), color.withValues(alpha: .01)],
+        ).createShader(Offset.zero & size),
+    );
+    void drawLine(Path path, Color line, double stroke, {bool dashed = false}) {
+      final paint = Paint()
+        ..color = line
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round;
+      if (dashed) {
+        for (final metric in path.computeMetrics()) {
+          for (double offset = 0; offset < metric.length; offset += 10) {
+            canvas.drawPath(
+              metric.extractPath(offset, math.min(offset + 5, metric.length)),
+              paint,
+            );
+          }
+        }
+      } else {
+        canvas.drawPath(path, paint);
       }
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = line
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = stroke
-          ..strokeJoin = StrokeJoin.round
-          ..strokeCap = StrokeCap.round,
-      );
     }
 
     if (baseline != null) {
-      drawLine(baseline!, muted.withValues(alpha: .55), 1.5);
+      drawLine(
+        series(baseline!),
+        muted.withValues(alpha: .8),
+        1.7,
+        dashed: true,
+      );
     }
-    drawLine(days, color, 2.7);
+    drawLine(mainPath, color, 2.7);
+    canvas.drawLine(
+      Offset(x(index), 8),
+      Offset(x(index), size.height - 12),
+      Paint()
+        ..color = color.withValues(alpha: .18)
+        ..strokeWidth = 1,
+    );
+    if (baseline != null && index < baseline!.length) {
+      canvas.drawCircle(
+        Offset(x(index), y(baseline![index].balancePence)),
+        4,
+        Paint()..color = muted,
+      );
+    }
     canvas.drawCircle(
       Offset(x(index), y(days[index].balancePence)),
       7,
@@ -579,6 +700,8 @@ class _ForecastPainter extends CustomPainter {
       days != old.days ||
       baseline != old.baseline ||
       color != old.color ||
+      grid != old.grid ||
+      muted != old.muted ||
       index != old.index;
 }
 
