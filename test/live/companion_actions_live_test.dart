@@ -23,7 +23,7 @@ void main() {
       final evidence = <String, Object?>{
         'checkedAt': DateTime.now().toUtc().toIso8601String(),
         'agentId': companion.agentId,
-        'model': 'gemini-3.8-flash',
+      'configuredPrimaryModel': 'gemini-3.8-flash',
         'synthetic': true,
         'realAppState': true,
         'realN8n': true,

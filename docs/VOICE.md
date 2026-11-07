@@ -22,7 +22,7 @@ Four client tools are registered in the Flutter voice SDK and text WebSocket cli
 
 Action cards show the calculated outcome directly in chat. A completed recovery plan includes its sources and an editable, autosaved draft with Copy. Voice mode uses the upper two-thirds for Cloudy and the lower third for controls and transcript; Chat preserves the same session and messages.
 
-The opt-in live app-state test completed all four tool calls through Gemini 3.8 Flash: a £150 repair produced a £330 gap, n8n execution `10` produced the draft, a £500 goal retained £35, and the historical comparison returned its reconstructed/synthetic disclosure. Evidence: `integrations/elevenlabs/app-actions-verification.json`. This check uses isolated synthetic preferences rather than the phone's saved progress.
+The opt-in live app-state test completed all four tool calls: a £150 repair produced a £330 gap, n8n execution `10` produced the draft, a £500 goal retained £35, and the historical comparison returned its reconstructed/synthetic disclosure. Gemini 3.8 Flash remains the configured primary model; the retained default provider fallback also used Gemini 3.5 Flash during this conversation, confirmed in the post-call transcript. Evidence: `integrations/elevenlabs/app-actions-verification.json`. This check uses isolated synthetic preferences rather than the phone's saved progress.
 
 “Stop voice playback” ends the voice session immediately, which stops microphone capture and output. The official SDK does not expose an independent output-pause API. Starting voice again retains the visible conversation through a contextual update. Mute controls input; it does not pause Cloudy's output.
 

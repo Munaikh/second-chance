@@ -1,7 +1,6 @@
 {
   "checkedAt": "2026-11-07T17:34:23.877958Z",
   "agentId": "agent_8301m6v7kzdgfza9119295h54skt",
-  "model": "gemini-3.8-flash",
   "synthetic": true,
   "realAppState": true,
   "realN8n": true,
@@ -817,5 +816,12 @@
     }
   ],
   "conversationId": "conv_3001m6vh6s8febeayr6p4ttem2vv",
-  "passed": true
+  "passed": true,
+  "configuredPrimaryModel": "gemini-3.8-flash",
+  "observedModels": [
+    "gemini-3.8-flash",
+    "gemini-3.5-flash"
+  ],
+  "agentVersionId": "agtvrsn_1701m6vh6k1sf5c8tdrpxgv7950r",
+  "modelVerificationSource": "ElevenLabs conversation transcript producing_llm; default provider fallback was retained"
 }

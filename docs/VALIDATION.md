@@ -4,7 +4,7 @@ Checks completed on 7 November 2026 using Flutter 3.47.9, Dart 3.13.7 and Xcode 
 
 ## Phone voice, motion and time travel
 
-Current checks: `flutter analyze` has no issues; all **90 offline Flutter tests** pass. The separate opt-in live app-action test also passes against Gemini 3.8 Flash and real n8n execution `10`.
+Current checks: `flutter analyze` has no issues; all **90 offline Flutter tests** pass. The separate opt-in live app-action test also passes with Gemini 3.8 Flash configured as primary, provider fallback to Gemini 3.5 Flash observed, and real n8n execution `10`.
 
 The latest phone build uses Motor for the shared Cloudy/greeting transition and spring-driven sheet exit, preserves the mounted conversation and draft, and removes the redundant hamburger menu. Forecast, support and savings remain reachable through the sheet; chat Back and profile controls remain available. Reduced motion snaps to the selected state.
 
